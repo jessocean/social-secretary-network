@@ -41,12 +41,13 @@ Production: would use Supabase Phone OTP (not yet wired).
 Schema at `src/lib/db/schema.ts` — 12 tables with Drizzle. Currently all UI uses inline mock data and doesn't require a running database.
 
 ## What's Done
-- Full UI: landing, login, verify, onboarding (8 steps), dashboard, proposals, coordination, friends, invite landing page
+- Full UI: landing, login, verify, onboarding (7 steps), dashboard, proposals, coordination, friends, settings, invite landing page
 - Agent engine: scheduler, scorer, negotiator
 - Mock calendar with 4 test personas
 - 31 passing unit tests
 - Seed script for 4 users
 - PWA manifest + service worker
+- Proposal state persists to localStorage
 
 ## What's NOT Done Yet
 - Playwright E2E tests
@@ -76,8 +77,30 @@ See `.env.example`. Key vars:
 - `AUTH_MODE=dev` — enables dev OTP (any code works)
 - `DATABASE_URL` — Postgres connection (only needed for seed script)
 
+## Prototype Feedback Changes
+
+### Round 1 (commit 574de86)
+- Replaced indigo/violet theme with monochrome (gray-900 primary)
+- Simplified onboarding: removed Open House + Priority Contacts, added Connect Calendar step (7 steps)
+- Rewrote CalendarReview with inline editing
+- Fixed engagement flow: Proposed → Pending → Confirmed with 3-tab UI and messaging checkboxes
+- Removed match percentages and priority dots from UI (backend fields kept)
+- Fixed mock data consistency: Alice/Bob/Carol/Dave with SF locations
+- Simplified invite flow: single link, recipient chooses join type
+- Dashboard starts empty (no pre-confirmed events)
+
+### Round 2 (commit 91373c6)
+- Removed "Skip for now" from calendar step; added "Why do you need this?" tooltip
+- Made constraints editable by clicking (especially sleep times)
+- Added constraint suggestion examples (naptimes, daycare pickup, kids' bedtime, sabbath)
+- Changed hosting subtitle from "playdates" to "Are you OK hosting people here?"
+- Fixed pending proposals: removed accept/decline buttons, shows "Waiting for confirmation"
+- Removed Carol (pending friend) from proposals — only confirmed friends get proposals
+- Persisted proposal state to localStorage
+- Created settings page with "Delete my account" flow
+
 ## Conventions
-- Mobile-first, indigo/violet theme (#6366f1)
+- Mobile-first, monochrome theme (gray-900 primary, no color accents)
 - Client components use `"use client"` directive
 - shadcn/ui components at `@/components/ui/`
 - Agent engine is pure functions — never import DB in `src/lib/agent/`
