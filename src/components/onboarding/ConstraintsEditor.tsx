@@ -107,7 +107,7 @@ export function ConstraintsEditor({ data, onChange, onNext, onBack }: Constraint
           <Card key={constraint.id} className="border">
             <CardContent className="flex items-start justify-between py-3">
               <div className="flex items-start gap-3">
-                <div className="mt-0.5 flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-100 text-indigo-600">
+                <div className="mt-0.5 flex h-8 w-8 items-center justify-center rounded-lg bg-gray-100 text-gray-600">
                   {TYPE_ICONS[constraint.type] || <Moon className="h-4 w-4" />}
                 </div>
                 <div className="flex flex-col">
@@ -144,7 +144,7 @@ export function ConstraintsEditor({ data, onChange, onNext, onBack }: Constraint
 
       {/* Add constraint form */}
       {showAdd ? (
-        <Card className="border-2 border-indigo-200 bg-indigo-50/50">
+        <Card className="border-2 border-gray-300 bg-gray-50">
           <CardContent className="flex flex-col gap-4 py-4">
             <div className="flex gap-3">
               <div className="flex-1">
@@ -223,7 +223,7 @@ export function ConstraintsEditor({ data, onChange, onNext, onBack }: Constraint
               <Button
                 size="sm"
                 onClick={addConstraint}
-                className="flex-1 bg-indigo-500 text-white hover:bg-indigo-600"
+                className="flex-1 bg-gray-900 text-white hover:bg-gray-800"
               >
                 Add
               </Button>
@@ -246,10 +246,10 @@ export function ConstraintsEditor({ data, onChange, onNext, onBack }: Constraint
         <CardContent className="flex flex-col gap-3 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Car className="h-4 w-4 text-indigo-500" />
+              <Car className="h-4 w-4 text-gray-500" />
               <Label className="text-sm font-medium">Transit buffer</Label>
             </div>
-            <span className="text-sm font-semibold text-indigo-600">
+            <span className="text-sm font-semibold text-gray-700">
               {data.transitBuffer} min
             </span>
           </div>
@@ -276,7 +276,7 @@ export function ConstraintsEditor({ data, onChange, onNext, onBack }: Constraint
         </Button>
         <Button
           onClick={onNext}
-          className="flex-1 bg-gradient-to-r from-indigo-500 to-violet-500 text-white hover:from-indigo-600 hover:to-violet-600"
+          className="flex-1 bg-gray-900 text-white hover:bg-gray-800"
         >
           Next
         </Button>

@@ -75,7 +75,7 @@ export function PreferencesEditor({ data, onChange, onNext, onBack }: Preference
                 onClick={() => toggleEngagementType(type.value)}
                 className={`flex items-center gap-2.5 rounded-xl border-2 px-3 py-2.5 text-left text-sm transition-colors ${
                   isSelected
-                    ? "border-indigo-300 bg-indigo-50 text-indigo-700"
+                    ? "border-gray-400 bg-gray-100 text-gray-900"
                     : "border-gray-200 bg-white text-gray-700 hover:border-gray-300"
                 }`}
               >
@@ -97,7 +97,7 @@ export function PreferencesEditor({ data, onChange, onNext, onBack }: Preference
         <CardContent className="flex flex-col gap-3 py-4">
           <div className="flex items-center justify-between">
             <Label className="text-sm font-medium">Max events per week</Label>
-            <span className="text-sm font-semibold text-indigo-600">
+            <span className="text-sm font-semibold text-gray-900">
               {data.maxEventsPerWeek}
             </span>
           </div>
@@ -168,7 +168,7 @@ export function PreferencesEditor({ data, onChange, onNext, onBack }: Preference
         </Button>
         <Button
           onClick={onNext}
-          className="flex-1 bg-gradient-to-r from-indigo-500 to-violet-500 text-white hover:from-indigo-600 hover:to-violet-600"
+          className="flex-1 bg-gray-900 text-white hover:bg-gray-800"
         >
           Next
         </Button>

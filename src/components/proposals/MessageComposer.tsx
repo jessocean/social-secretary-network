@@ -113,7 +113,7 @@ export function MessageComposer({
       <SheetContent side="bottom" className="rounded-t-2xl pb-8">
         <SheetHeader>
           <SheetTitle className="flex items-center gap-2">
-            <MessageCircle className="h-5 w-5 text-indigo-600" />
+            <MessageCircle className="h-5 w-5 text-gray-700" />
             Message to {friendName}
           </SheetTitle>
           <SheetDescription>
@@ -145,7 +145,7 @@ export function MessageComposer({
           <button
             type="button"
             onClick={handleReset}
-            className="text-xs text-indigo-600 hover:text-indigo-700 font-medium"
+            className="text-xs text-gray-600 hover:text-gray-700 font-medium"
           >
             Reset to template
           </button>
@@ -154,7 +154,7 @@ export function MessageComposer({
         <SheetFooter className="gap-2 px-4 pt-2">
           <Button
             onClick={handleCopy}
-            className="w-full bg-indigo-600 hover:bg-indigo-700"
+            className="w-full bg-gray-900 hover:bg-gray-800"
             size="lg"
           >
             {copied ? (

@@ -57,36 +57,35 @@ function makeTime(dayOffset: number, hour: number): string {
 const INITIAL_COORD: CoordProposal[] = [
   {
     id: "c1",
-    title: "Coffee with Sarah",
+    title: "Coffee with Alice",
     type: "coffee",
     startTime: makeTime(1, 10),
     endTime: makeTime(1, 11),
-    locationName: "Blue Bottle Coffee",
+    locationName: "Reveille Coffee Co",
     participants: [
-      { id: "u1", name: "Sarah Martinez", status: "sent" },
+      { id: "u1", name: "Alice Chen", status: "sent" },
     ],
   },
   {
     id: "c2",
-    title: "Playground with Emma & kids",
+    title: "Playground with Bob & kids",
     type: "playground",
     startTime: makeTime(3, 15),
     endTime: makeTime(3, 17),
-    locationName: "Central Park Playground",
+    locationName: "Duboce Park",
     participants: [
-      { id: "u2", name: "Emma Lewis", status: "awaiting" },
+      { id: "u2", name: "Bob Martinez", status: "awaiting" },
     ],
   },
   {
     id: "c3",
-    title: "Dinner with Rachel & Tom",
+    title: "Dinner with Carol",
     type: "dinner",
     startTime: makeTime(4, 19),
     endTime: makeTime(4, 21),
-    locationName: "Lucia's Kitchen",
+    locationName: "Nopalito",
     participants: [
-      { id: "u3", name: "Rachel Kim", status: "confirmed" },
-      { id: "u4", name: "Tom Kim", status: "awaiting" },
+      { id: "u3", name: "Carol Johnson", status: "confirmed" },
     ],
   },
   {
@@ -95,20 +94,9 @@ const INITIAL_COORD: CoordProposal[] = [
     type: "playdate_home",
     startTime: makeTime(5, 10),
     endTime: makeTime(5, 12),
-    locationName: "Home",
+    locationName: "Home (106 Corbett Ave)",
     participants: [
-      { id: "u5", name: "Amy Chen", status: "confirmed" },
-    ],
-  },
-  {
-    id: "c5",
-    title: "Morning walk with Priya",
-    type: "walk",
-    startTime: makeTime(2, 8),
-    endTime: makeTime(2, 9),
-    locationName: "Riverside Park",
-    participants: [
-      { id: "u6", name: "Priya Patel", status: "confirmed" },
+      { id: "u4", name: "Dave Kim", status: "confirmed" },
     ],
   },
 ];
@@ -124,22 +112,22 @@ const STATUS_CONFIG: Record<
   sent: {
     icon: Send,
     label: "Message sent",
-    color: "text-blue-600",
+    color: "text-gray-500",
   },
   awaiting: {
     icon: Hourglass,
     label: "Awaiting response",
-    color: "text-amber-600",
+    color: "text-gray-500",
   },
   confirmed: {
     icon: CheckCircle2,
     label: "Confirmed",
-    color: "text-green-600",
+    color: "text-gray-700",
   },
   declined: {
     icon: XCircle,
     label: "Declined",
-    color: "text-red-600",
+    color: "text-gray-400",
   },
 };
 
@@ -233,8 +221,8 @@ export default function CoordinationPage() {
         <Badge
           variant="outline"
           className={cn(
-            "border-amber-200 text-amber-700 bg-amber-50",
-            awaitingCount === 0 && "border-gray-200 text-gray-500 bg-gray-50"
+            "border-gray-300 text-gray-600",
+            awaitingCount === 0 && "border-gray-200 text-gray-400"
           )}
         >
           <Hourglass className="mr-1 h-3 w-3" />
@@ -242,7 +230,7 @@ export default function CoordinationPage() {
         </Badge>
         <Badge
           variant="outline"
-          className="border-green-200 text-green-700 bg-green-50"
+          className="border-gray-300 text-gray-700"
         >
           <CheckCircle2 className="mr-1 h-3 w-3" />
           {confirmedCount} confirmed
@@ -250,7 +238,7 @@ export default function CoordinationPage() {
         {declinedCount > 0 && (
           <Badge
             variant="outline"
-            className="border-red-200 text-red-700 bg-red-50"
+            className="border-gray-200 text-gray-400"
           >
             <XCircle className="mr-1 h-3 w-3" />
             {declinedCount} declined
@@ -262,7 +250,7 @@ export default function CoordinationPage() {
       {needsAction.length > 0 && (
         <div className="mb-6">
           <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold text-gray-900">
-            <MessageCircle className="h-4 w-4 text-amber-600" />
+            <MessageCircle className="h-4 w-4 text-gray-500" />
             Awaiting responses
           </h2>
           <div className="space-y-3">
@@ -271,7 +259,7 @@ export default function CoordinationPage() {
               const endDate = new Date(proposal.endTime);
 
               return (
-                <Card key={proposal.id} className="gap-0 border-amber-100 py-0">
+                <Card key={proposal.id} className="gap-0 border-dashed py-0">
                   <CardContent className="p-4">
                     {/* Proposal details */}
                     <h3 className="text-sm font-semibold text-gray-900">
@@ -312,7 +300,7 @@ export default function CoordinationPage() {
                           >
                             <div className="flex items-center gap-2.5">
                               <Avatar size="sm">
-                                <AvatarFallback className="bg-indigo-100 text-indigo-700 text-[10px] font-medium">
+                                <AvatarFallback className="bg-gray-100 text-gray-700 text-[10px] font-medium">
                                   {getInitials(participant.name)}
                                 </AvatarFallback>
                               </Avatar>
@@ -367,7 +355,7 @@ export default function CoordinationPage() {
       {allGood.length > 0 && (
         <div>
           <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold text-gray-900">
-            <CheckCircle2 className="h-4 w-4 text-green-600" />
+            <CheckCircle2 className="h-4 w-4 text-gray-700" />
             All confirmed
           </h2>
           <div className="space-y-3">
@@ -378,7 +366,7 @@ export default function CoordinationPage() {
               return (
                 <Card
                   key={proposal.id}
-                  className="gap-0 border-green-100 bg-green-50/30 py-0"
+                  className="gap-0 border bg-gray-50/30 py-0"
                 >
                   <CardContent className="p-4">
                     <div className="flex items-start justify-between">
@@ -401,7 +389,7 @@ export default function CoordinationPage() {
                           </div>
                         )}
                       </div>
-                      <Badge className="bg-green-100 text-green-700 border-0 text-xs">
+                      <Badge variant="outline" className="border-gray-300 text-gray-700 text-xs">
                         All set
                       </Badge>
                     </div>
@@ -409,7 +397,7 @@ export default function CoordinationPage() {
                     <div className="mt-2.5 flex items-center gap-1.5">
                       {proposal.participants.map((p) => (
                         <Avatar key={p.id} size="sm">
-                          <AvatarFallback className="bg-green-100 text-green-700 text-[10px] font-medium">
+                          <AvatarFallback className="bg-gray-100 text-gray-700 text-[10px] font-medium">
                             {getInitials(p.name)}
                           </AvatarFallback>
                         </Avatar>

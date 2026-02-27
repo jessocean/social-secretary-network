@@ -31,8 +31,8 @@ export function WeatherPrefs({ data, onChange, onNext, onBack }: WeatherPrefsPro
       <Card>
         <CardContent className="flex items-center justify-between py-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-100">
-              <Sun className="h-5 w-5 text-amber-600" />
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gray-100">
+              <Sun className="h-5 w-5 text-gray-600" />
             </div>
             <div className="flex flex-col">
               <Label className="text-sm font-medium">Weather sensitive</Label>
@@ -52,10 +52,10 @@ export function WeatherPrefs({ data, onChange, onNext, onBack }: WeatherPrefsPro
 
       {/* Rain alternative */}
       {data.weatherSensitive && (
-        <Card className="border-2 border-blue-200 bg-blue-50/50">
+        <Card className="border-2 border-gray-300 bg-gray-50">
           <CardContent className="flex flex-col gap-3 py-4">
             <div className="flex items-center gap-2">
-              <CloudRain className="h-4 w-4 text-blue-500" />
+              <CloudRain className="h-4 w-4 text-gray-500" />
               <Label className="text-sm font-medium">Rain alternative</Label>
             </div>
             <Textarea
@@ -95,7 +95,7 @@ export function WeatherPrefs({ data, onChange, onNext, onBack }: WeatherPrefsPro
         </Button>
         <Button
           onClick={onNext}
-          className="flex-1 bg-gradient-to-r from-indigo-500 to-violet-500 text-white hover:from-indigo-600 hover:to-violet-600"
+          className="flex-1 bg-gray-900 text-white hover:bg-gray-800"
         >
           Next
         </Button>

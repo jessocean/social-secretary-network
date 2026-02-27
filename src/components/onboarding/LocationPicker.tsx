@@ -85,7 +85,7 @@ export function LocationPicker({ data, onChange, onNext, onBack }: LocationPicke
             <Card key={location.id}>
               <CardContent className="flex items-start justify-between py-3">
                 <div className="flex items-start gap-3">
-                  <div className="mt-0.5 flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-100 text-indigo-600">
+                  <div className="mt-0.5 flex h-8 w-8 items-center justify-center rounded-lg bg-gray-100 text-gray-600">
                     {TYPE_ICONS[location.type] || <MapPin className="h-4 w-4" />}
                   </div>
                   <div className="flex flex-col">
@@ -130,7 +130,7 @@ export function LocationPicker({ data, onChange, onNext, onBack }: LocationPicke
 
       {/* Add location form */}
       {showAdd ? (
-        <Card className="border-2 border-indigo-200 bg-indigo-50/50">
+        <Card className="border-2 border-gray-300 bg-gray-50">
           <CardContent className="flex flex-col gap-4 py-4">
             <div>
               <Label className="text-xs">Name</Label>
@@ -159,10 +159,10 @@ export function LocationPicker({ data, onChange, onNext, onBack }: LocationPicke
             </div>
 
             <div>
-              <Label className="text-xs">Address (optional)</Label>
+              <Label className="text-xs">Address</Label>
               <Input
                 className="mt-1 bg-white"
-                placeholder="123 Main St"
+                placeholder="Enter a full address (e.g., 123 Main St, San Francisco)"
                 value={newAddress}
                 onChange={(e) => setNewAddress(e.target.value)}
               />
@@ -181,6 +181,10 @@ export function LocationPicker({ data, onChange, onNext, onBack }: LocationPicke
               />
             </div>
 
+            <p className="text-[11px] text-muted-foreground">
+              Locations should be near your home address
+            </p>
+
             <div className="flex gap-2">
               <Button
                 variant="outline"
@@ -194,7 +198,7 @@ export function LocationPicker({ data, onChange, onNext, onBack }: LocationPicke
                 size="sm"
                 onClick={addLocation}
                 disabled={!newLabel.trim()}
-                className="flex-1 bg-indigo-500 text-white hover:bg-indigo-600"
+                className="flex-1 bg-gray-900 text-white hover:bg-gray-800"
               >
                 Add
               </Button>
@@ -219,7 +223,7 @@ export function LocationPicker({ data, onChange, onNext, onBack }: LocationPicke
         </Button>
         <Button
           onClick={onNext}
-          className="flex-1 bg-gradient-to-r from-indigo-500 to-violet-500 text-white hover:from-indigo-600 hover:to-violet-600"
+          className="flex-1 bg-gray-900 text-white hover:bg-gray-800"
         >
           Next
         </Button>

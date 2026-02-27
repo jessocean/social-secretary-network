@@ -59,7 +59,7 @@ export function ConfirmationFlow({
       <Button
         size="sm"
         variant="outline"
-        className="border-indigo-200 text-indigo-600 hover:bg-indigo-50"
+        className="border-gray-300 text-gray-700 hover:bg-gray-50"
         onClick={handleOpen}
       >
         <MessageCircle className="h-3.5 w-3.5" />
@@ -84,7 +84,7 @@ export function ConfirmationFlow({
                   Can {firstName} make it?
                 </p>
                 <Button
-                  className="w-full bg-indigo-600 hover:bg-indigo-700"
+                  className="w-full bg-gray-900 hover:bg-gray-800"
                   size="lg"
                   onClick={() => setStep("confirm")}
                 >
@@ -107,7 +107,7 @@ export function ConfirmationFlow({
 
               <div className="flex flex-col gap-3 py-4">
                 <Button
-                  className="w-full bg-green-600 hover:bg-green-700 text-white"
+                  className="w-full bg-gray-900 hover:bg-gray-800 text-white"
                   size="lg"
                   onClick={handleConfirm}
                 >

@@ -2,13 +2,12 @@
 
 import { useRouter } from "next/navigation";
 import { useOnboarding, ONBOARDING_STEPS } from "@/hooks/useOnboarding";
+import { ConnectCalendar } from "@/components/onboarding/ConnectCalendar";
 import { CalendarReview } from "@/components/onboarding/CalendarReview";
 import { ConstraintsEditor } from "@/components/onboarding/ConstraintsEditor";
 import { PreferencesEditor } from "@/components/onboarding/PreferencesEditor";
 import { LocationPicker } from "@/components/onboarding/LocationPicker";
 import { WeatherPrefs } from "@/components/onboarding/WeatherPrefs";
-import { OpenHouseHours } from "@/components/onboarding/OpenHouseHours";
-import { PriorityContacts } from "@/components/onboarding/PriorityContacts";
 import { ReviewComplete } from "@/components/onboarding/ReviewComplete";
 
 export default function OnboardingPage() {
@@ -24,6 +23,13 @@ export default function OnboardingPage() {
 
   const renderStep = () => {
     switch (onboarding.currentStepId) {
+      case "connect":
+        return (
+          <ConnectCalendar
+            onNext={onboarding.next}
+            onBack={onboarding.back}
+          />
+        );
       case "calendar":
         return (
           <CalendarReview
@@ -69,24 +75,6 @@ export default function OnboardingPage() {
             onBack={onboarding.back}
           />
         );
-      case "openhouse":
-        return (
-          <OpenHouseHours
-            data={onboarding.data.openhouse}
-            onChange={(d) => onboarding.updateStepData("openhouse", d)}
-            onNext={onboarding.next}
-            onBack={onboarding.back}
-          />
-        );
-      case "contacts":
-        return (
-          <PriorityContacts
-            data={onboarding.data.contacts}
-            onChange={(d) => onboarding.updateStepData("contacts", d)}
-            onNext={onboarding.next}
-            onBack={onboarding.back}
-          />
-        );
       case "review":
         return (
           <ReviewComplete
@@ -112,7 +100,7 @@ export default function OnboardingPage() {
           <span className="text-xs font-medium text-muted-foreground">
             Step {onboarding.currentStep + 1} of {onboarding.totalSteps}
           </span>
-          <span className="text-xs font-medium text-indigo-600">
+          <span className="text-xs font-medium text-gray-700">
             {ONBOARDING_STEPS[onboarding.currentStep]?.label}
           </span>
         </div>
@@ -120,7 +108,7 @@ export default function OnboardingPage() {
         {/* Progress bar */}
         <div className="h-1.5 overflow-hidden rounded-full bg-gray-100">
           <div
-            className="h-full rounded-full bg-gradient-to-r from-indigo-500 to-violet-500 transition-all duration-500 ease-out"
+            className="h-full rounded-full bg-gray-900 transition-all duration-500 ease-out"
             style={{ width: `${onboarding.progress}%` }}
           />
         </div>
@@ -133,9 +121,9 @@ export default function OnboardingPage() {
               onClick={() => onboarding.goToStep(i)}
               className={`h-2 w-2 rounded-full transition-colors ${
                 i === onboarding.currentStep
-                  ? "bg-indigo-500"
+                  ? "bg-gray-900"
                   : i < onboarding.currentStep
-                    ? "bg-indigo-300"
+                    ? "bg-gray-400"
                     : "bg-gray-200"
               }`}
               aria-label={`Go to ${step.label}`}

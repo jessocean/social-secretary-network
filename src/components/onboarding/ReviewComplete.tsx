@@ -9,7 +9,6 @@ import {
   Clock,
   MapPin,
   CloudRain,
-  DoorOpen,
   Heart,
   CheckCircle2,
   Loader2,
@@ -47,8 +46,8 @@ export function ReviewComplete({
   return (
     <div className="flex flex-col gap-6">
       <div className="text-center">
-        <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-green-100">
-          <CheckCircle2 className="h-7 w-7 text-green-600" />
+        <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-gray-100">
+          <CheckCircle2 className="h-7 w-7 text-gray-700" />
         </div>
         <h2 className="text-xl font-bold text-gray-900">All set!</h2>
         <p className="mt-1 text-sm text-muted-foreground">
@@ -59,7 +58,7 @@ export function ReviewComplete({
       {/* Calendar summary */}
       <Card>
         <CardContent className="flex items-start gap-3 py-3">
-          <Calendar className="mt-0.5 h-4 w-4 text-indigo-500" />
+          <Calendar className="mt-0.5 h-4 w-4 text-gray-500" />
           <div className="flex flex-col">
             <span className="text-sm font-medium">Calendar</span>
             <span className="text-xs text-muted-foreground">
@@ -72,7 +71,7 @@ export function ReviewComplete({
       {/* Constraints summary */}
       <Card>
         <CardContent className="flex items-start gap-3 py-3">
-          <Clock className="mt-0.5 h-4 w-4 text-indigo-500" />
+          <Clock className="mt-0.5 h-4 w-4 text-gray-500" />
           <div className="flex flex-col gap-1">
             <span className="text-sm font-medium">Constraints</span>
             <span className="text-xs text-muted-foreground">
@@ -94,7 +93,7 @@ export function ReviewComplete({
       {/* Preferences summary */}
       <Card>
         <CardContent className="flex items-start gap-3 py-3">
-          <Heart className="mt-0.5 h-4 w-4 text-indigo-500" />
+          <Heart className="mt-0.5 h-4 w-4 text-gray-500" />
           <div className="flex flex-col gap-1">
             <span className="text-sm font-medium">Preferences</span>
             <span className="text-xs text-muted-foreground">
@@ -122,7 +121,7 @@ export function ReviewComplete({
       {/* Locations summary */}
       <Card>
         <CardContent className="flex items-start gap-3 py-3">
-          <MapPin className="mt-0.5 h-4 w-4 text-indigo-500" />
+          <MapPin className="mt-0.5 h-4 w-4 text-gray-500" />
           <div className="flex flex-col">
             <span className="text-sm font-medium">Locations</span>
             <span className="text-xs text-muted-foreground">
@@ -142,28 +141,13 @@ export function ReviewComplete({
       {/* Weather summary */}
       <Card>
         <CardContent className="flex items-start gap-3 py-3">
-          <CloudRain className="mt-0.5 h-4 w-4 text-indigo-500" />
+          <CloudRain className="mt-0.5 h-4 w-4 text-gray-500" />
           <div className="flex flex-col">
             <span className="text-sm font-medium">Weather</span>
             <span className="text-xs text-muted-foreground">
               {data.weather.weatherSensitive
                 ? `Weather sensitive${data.weather.rainAlternative ? ": " + data.weather.rainAlternative : ""}`
                 : "Not weather sensitive"}
-            </span>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Open house summary */}
-      <Card>
-        <CardContent className="flex items-start gap-3 py-3">
-          <DoorOpen className="mt-0.5 h-4 w-4 text-indigo-500" />
-          <div className="flex flex-col">
-            <span className="text-sm font-medium">Open house</span>
-            <span className="text-xs text-muted-foreground">
-              {data.openhouse.day
-                ? `${data.openhouse.day.charAt(0).toUpperCase() + data.openhouse.day.slice(1)}s ${data.openhouse.startTime} - ${data.openhouse.endTime}`
-                : "Not set"}
             </span>
           </div>
         </CardContent>
@@ -179,7 +163,7 @@ export function ReviewComplete({
         <Button
           onClick={onComplete}
           disabled={isSaving}
-          className="flex-1 bg-gradient-to-r from-indigo-500 to-violet-500 text-white hover:from-indigo-600 hover:to-violet-600"
+          className="flex-1 bg-gray-900 text-white hover:bg-gray-800"
           size="lg"
         >
           {isSaving ? (

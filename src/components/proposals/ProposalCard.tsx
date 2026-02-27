@@ -69,13 +69,13 @@ const TYPE_ICONS: Record<string, typeof Coffee> = {
 };
 
 const TYPE_COLORS: Record<string, string> = {
-  playground: "bg-green-100 text-green-700",
-  coffee: "bg-amber-100 text-amber-700",
-  playdate_home: "bg-pink-100 text-pink-700",
-  dinner: "bg-orange-100 text-orange-700",
-  park: "bg-emerald-100 text-emerald-700",
-  class: "bg-blue-100 text-blue-700",
-  walk: "bg-teal-100 text-teal-700",
+  playground: "bg-gray-100 text-gray-700",
+  coffee: "bg-gray-100 text-gray-700",
+  playdate_home: "bg-gray-100 text-gray-700",
+  dinner: "bg-gray-100 text-gray-700",
+  park: "bg-gray-100 text-gray-700",
+  class: "bg-gray-100 text-gray-700",
+  walk: "bg-gray-100 text-gray-700",
   other: "bg-gray-100 text-gray-700",
 };
 
@@ -150,13 +150,6 @@ export function ProposalCard({
               <h3 className="truncate text-sm font-semibold text-gray-900">
                 {proposal.title}
               </h3>
-              {proposal.score != null && (
-                <Badge
-                  className="shrink-0 bg-gradient-to-r from-indigo-500 to-violet-500 text-white border-0"
-                >
-                  {formatScorePercent(proposal.score)} match
-                </Badge>
-              )}
             </div>
 
             {/* Date, time, location */}
@@ -189,7 +182,7 @@ export function ProposalCard({
             <AvatarGroup>
               {proposal.participants.map((p) => (
                 <Avatar key={p.name} size="sm" className="relative">
-                  <AvatarFallback className="bg-indigo-100 text-indigo-700 text-[10px] font-medium">
+                  <AvatarFallback className="bg-gray-100 text-gray-700 text-[10px] font-medium">
                     {getInitials(p.name)}
                   </AvatarFallback>
                   <span
@@ -213,7 +206,7 @@ export function ProposalCard({
             <>
               <Button
                 size="sm"
-                className="flex-1 bg-indigo-600 hover:bg-indigo-700"
+                className="flex-1 bg-gray-900 hover:bg-gray-800"
                 onClick={() => onAccept?.(proposal.id)}
               >
                 <Check className="h-4 w-4" />
@@ -235,7 +228,7 @@ export function ProposalCard({
             <>
               <Button
                 size="sm"
-                className="flex-1 bg-indigo-600 hover:bg-indigo-700"
+                className="flex-1 bg-gray-900 hover:bg-gray-800"
                 onClick={() => onSendMessage?.(proposal.id)}
               >
                 <MessageCircle className="h-4 w-4" />

@@ -119,7 +119,7 @@ export default function VerifyPage() {
     <div className="flex flex-col items-center gap-8">
       {/* Branding */}
       <div className="flex flex-col items-center gap-2 text-center">
-        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-500 shadow-lg">
+        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gray-900 shadow-lg">
           <span className="text-2xl font-bold text-white">S</span>
         </div>
       </div>
@@ -150,7 +150,7 @@ export default function VerifyPage() {
                   onChange={(e) => handleChange(index, e.target.value)}
                   onKeyDown={(e) => handleKeyDown(index, e)}
                   disabled={isLoading}
-                  className="h-12 w-11 rounded-lg border-2 border-gray-200 bg-white text-center text-lg font-semibold text-gray-900 transition-colors focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 disabled:opacity-50"
+                  className="h-12 w-11 rounded-lg border-2 border-gray-200 bg-white text-center text-lg font-semibold text-gray-900 transition-colors focus:border-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900/20 disabled:opacity-50"
                 />
               ))}
             </div>

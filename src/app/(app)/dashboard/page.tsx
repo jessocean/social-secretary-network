@@ -11,18 +11,13 @@ import {
   FileText,
   Loader2,
   Coffee,
-  Trees,
-  Home,
   UtensilsCrossed,
-  MapPin,
-  Clock,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { cn } from "@/lib/utils";
 
 // ---------------------------------------------------------------------------
 // Mock data
@@ -31,61 +26,18 @@ import { cn } from "@/lib/utils";
 const now = new Date();
 const weekStart = startOfWeek(now, { weekStartsOn: 1 });
 
-const MOCK_UPCOMING = [
-  {
-    id: "1",
-    type: "coffee",
-    title: "Coffee with Sarah",
-    locationName: "Blue Bottle Coffee",
-    startTime: addDays(weekStart, 1).toISOString().replace("T00:", "T10:"),
-    endTime: addDays(weekStart, 1).toISOString().replace("T00:", "T11:"),
-    status: "confirmed" as const,
-    friendName: "Sarah M.",
-  },
-  {
-    id: "2",
-    type: "playground",
-    title: "Playground with Emma & kids",
-    locationName: "Central Park Playground",
-    startTime: addDays(weekStart, 3).toISOString().replace("T00:", "T15:"),
-    endTime: addDays(weekStart, 3).toISOString().replace("T00:", "T17:"),
-    status: "confirmed" as const,
-    friendName: "Emma L.",
-  },
-  {
-    id: "3",
-    type: "playdate_home",
-    title: "Playdate at Jessica's",
-    locationName: "Home",
-    startTime: addDays(weekStart, 5).toISOString().replace("T00:", "T10:"),
-    endTime: addDays(weekStart, 5).toISOString().replace("T00:", "T12:"),
-    status: "confirmed" as const,
-    friendName: "Amy K.",
-  },
-];
-
 const MOCK_PENDING = [
   {
     id: "4",
     type: "dinner",
-    title: "Dinner with Rachel",
+    title: "Dinner with Bob",
     status: "proposed" as const,
-    score: 0.88,
   },
 ];
 
 const TYPE_ICONS: Record<string, typeof Coffee> = {
   coffee: Coffee,
-  playground: Trees,
-  playdate_home: Home,
   dinner: UtensilsCrossed,
-};
-
-const TYPE_COLORS: Record<string, string> = {
-  coffee: "bg-amber-100 text-amber-700",
-  playground: "bg-green-100 text-green-700",
-  playdate_home: "bg-pink-100 text-pink-700",
-  dinner: "bg-orange-100 text-orange-700",
 };
 
 // ---------------------------------------------------------------------------
@@ -96,7 +48,7 @@ export default function DashboardPage() {
   const [generating, setGenerating] = useState(false);
 
   const totalGoal = 5;
-  const confirmedCount = MOCK_UPCOMING.length;
+  const confirmedCount = 0;
   const pendingCount = MOCK_PENDING.length;
   const progress = Math.min((confirmedCount / totalGoal) * 100, 100);
 
@@ -133,7 +85,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Stats bar */}
-      <Card className="mb-5 gap-0 border-indigo-100 bg-gradient-to-r from-indigo-50 to-violet-50 py-0">
+      <Card className="mb-5 gap-0 border-gray-200 bg-gray-50 py-0">
         <CardContent className="p-4">
           <div className="flex items-center justify-between">
             <div>
@@ -144,14 +96,14 @@ export default function DashboardPage() {
                 {pendingCount} pending proposal{pendingCount !== 1 ? "s" : ""}
               </p>
             </div>
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-indigo-100">
-              <CalendarCheck className="h-6 w-6 text-indigo-600" />
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-200">
+              <CalendarCheck className="h-6 w-6 text-gray-600" />
             </div>
           </div>
           {/* Progress bar */}
-          <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-indigo-100">
+          <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-gray-200">
             <div
-              className="h-full rounded-full bg-gradient-to-r from-indigo-500 to-violet-500 transition-all duration-500"
+              className="h-full rounded-full bg-gray-900 transition-all duration-500"
               style={{ width: `${progress}%` }}
             />
           </div>
@@ -162,7 +114,7 @@ export default function DashboardPage() {
       <Button
         onClick={handleGenerate}
         disabled={generating}
-        className="mb-5 w-full bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 shadow-md"
+        className="mb-5 w-full bg-gray-900 hover:bg-gray-800 shadow-md"
         size="lg"
       >
         {generating ? (
@@ -178,64 +130,27 @@ export default function DashboardPage() {
         )}
       </Button>
 
-      {/* Upcoming confirmed events */}
+      {/* Upcoming this week - empty initially */}
       <div className="mb-5">
         <div className="mb-3 flex items-center justify-between">
           <h2 className="text-sm font-semibold text-gray-900">Upcoming this week</h2>
           <Link
             href="/proposals"
-            className="flex items-center gap-0.5 text-xs font-medium text-indigo-600 hover:text-indigo-700"
+            className="flex items-center gap-0.5 text-xs font-medium text-gray-600 hover:text-gray-700"
           >
             View all
             <ChevronRight className="h-3.5 w-3.5" />
           </Link>
         </div>
 
-        <div className="space-y-3">
-          {MOCK_UPCOMING.map((event) => {
-            const Icon = TYPE_ICONS[event.type] ?? Coffee;
-            const colorClass = TYPE_COLORS[event.type] ?? "bg-gray-100 text-gray-700";
-            const startDate = new Date(event.startTime);
-
-            return (
-              <Card key={event.id} className="gap-0 py-0">
-                <CardContent className="flex items-center gap-3 p-3">
-                  <div
-                    className={cn(
-                      "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg",
-                      colorClass
-                    )}
-                  >
-                    <Icon className="h-5 w-5" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium text-gray-900">
-                      {event.title}
-                    </p>
-                    <div className="flex items-center gap-3 text-xs text-gray-500">
-                      <span className="flex items-center gap-1">
-                        <Clock className="h-3 w-3" />
-                        {format(startDate, "EEE h:mm a")}
-                      </span>
-                      {event.locationName && (
-                        <span className="flex items-center gap-1 truncate">
-                          <MapPin className="h-3 w-3" />
-                          {event.locationName}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                  <Badge
-                    variant="secondary"
-                    className="shrink-0 bg-green-100 text-green-700 text-xs"
-                  >
-                    Confirmed
-                  </Badge>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
+        <Card className="gap-0 border-dashed py-0">
+          <CardContent className="py-8 text-center">
+            <CalendarCheck className="mx-auto h-8 w-8 text-gray-300" />
+            <p className="mt-2 text-sm text-gray-500">
+              No events yet. Generate proposals to get started!
+            </p>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Pending proposals */}
@@ -246,31 +161,23 @@ export default function DashboardPage() {
           </h2>
           {MOCK_PENDING.map((p) => {
             const Icon = TYPE_ICONS[p.type] ?? Coffee;
-            const colorClass = TYPE_COLORS[p.type] ?? "bg-gray-100 text-gray-700";
 
             return (
               <Link key={p.id} href="/proposals">
-                <Card className="gap-0 border-amber-100 bg-amber-50/50 py-0 transition-colors hover:bg-amber-50">
+                <Card className="gap-0 border-dashed py-0 transition-colors hover:bg-gray-50">
                   <CardContent className="flex items-center gap-3 p-3">
-                    <div
-                      className={cn(
-                        "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg",
-                        colorClass
-                      )}
-                    >
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gray-100 text-gray-700">
                       <Icon className="h-5 w-5" />
                     </div>
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-medium text-gray-900">
                         {p.title}
                       </p>
-                      <p className="text-xs text-amber-600">Tap to review</p>
+                      <p className="text-xs text-gray-500">Tap to review</p>
                     </div>
-                    {p.score != null && (
-                      <Badge className="shrink-0 bg-gradient-to-r from-indigo-500 to-violet-500 text-white border-0 text-xs">
-                        {Math.round(p.score * 100)}% match
-                      </Badge>
-                    )}
+                    <Badge variant="secondary" className="shrink-0 text-xs">
+                      Review
+                    </Badge>
                   </CardContent>
                 </Card>
               </Link>
@@ -286,8 +193,8 @@ export default function DashboardPage() {
         <Link href="/friends">
           <Card className="gap-0 py-0 transition-colors hover:bg-gray-50">
             <CardContent className="flex items-center gap-3 p-3">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-violet-100">
-                <UserPlus className="h-4 w-4 text-violet-700" />
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gray-100">
+                <UserPlus className="h-4 w-4 text-gray-700" />
               </div>
               <span className="text-sm font-medium text-gray-700">
                 Invite a friend
@@ -298,8 +205,8 @@ export default function DashboardPage() {
         <Link href="/proposals">
           <Card className="gap-0 py-0 transition-colors hover:bg-gray-50">
             <CardContent className="flex items-center gap-3 p-3">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-indigo-100">
-                <FileText className="h-4 w-4 text-indigo-700" />
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gray-100">
+                <FileText className="h-4 w-4 text-gray-700" />
               </div>
               <span className="text-sm font-medium text-gray-700">
                 All proposals

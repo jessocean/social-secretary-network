@@ -75,7 +75,7 @@ export default function LoginPage() {
     <div className="flex flex-col items-center gap-8">
       {/* Branding */}
       <div className="flex flex-col items-center gap-2 text-center">
-        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-500 shadow-lg">
+        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gray-900 shadow-lg">
           <span className="text-2xl font-bold text-white">S</span>
         </div>
         <h1 className="text-2xl font-bold tracking-tight text-gray-900">
@@ -130,7 +130,7 @@ export default function LoginPage() {
             <Button
               type="submit"
               disabled={isLoading || phone.replace(/\D/g, "").length < 7}
-              className="w-full bg-gradient-to-r from-indigo-500 to-violet-500 text-white hover:from-indigo-600 hover:to-violet-600"
+              className="w-full bg-gray-900 text-white hover:bg-gray-800"
               size="lg"
             >
               {isLoading ? "Sending..." : "Send verification code"}

@@ -2,10 +2,10 @@ import Link from "next/link";
 
 export default function Home() {
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-indigo-50 via-white to-violet-50 px-4">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-white px-4">
       <main className="flex max-w-md flex-col items-center gap-8 text-center">
         {/* Logo */}
-        <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-500 shadow-lg">
+        <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-gray-900 shadow-lg">
           <svg
             className="h-10 w-10 text-white"
             fill="none"
@@ -34,7 +34,7 @@ export default function Home() {
         <div className="space-y-4 w-full">
           <Link
             href="/login"
-            className="flex h-12 w-full items-center justify-center rounded-full bg-gradient-to-r from-indigo-500 to-violet-500 text-white font-medium shadow-md hover:shadow-lg transition-shadow"
+            className="flex h-12 w-full items-center justify-center rounded-full bg-gray-900 text-white font-medium shadow-md hover:shadow-lg transition-shadow"
           >
             Get Started
           </Link>

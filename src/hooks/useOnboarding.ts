@@ -3,13 +3,12 @@
 import { useState, useCallback, useMemo } from "react";
 
 export const ONBOARDING_STEPS = [
+  { id: "connect", label: "Connect" },
   { id: "calendar", label: "Calendar" },
   { id: "constraints", label: "Constraints" },
   { id: "preferences", label: "Preferences" },
   { id: "locations", label: "Locations" },
   { id: "weather", label: "Weather" },
-  { id: "openhouse", label: "Open House" },
-  { id: "contacts", label: "Contacts" },
   { id: "review", label: "Review" },
 ] as const;
 
@@ -22,6 +21,7 @@ export interface CalendarEvent {
   startTime: string; // "HH:mm"
   endTime: string; // "HH:mm"
   isBusy: boolean;
+  location?: string;
 }
 
 export interface Constraint {
@@ -42,6 +42,7 @@ export interface Location {
 }
 
 export interface OnboardingData {
+  connect: Record<string, unknown>;
   calendar: {
     events: CalendarEvent[];
   };
@@ -64,17 +65,11 @@ export interface OnboardingData {
     weatherSensitive: boolean;
     rainAlternative: string;
   };
-  openhouse: {
-    day: string;
-    startTime: string;
-    endTime: string;
-    note: string;
-  };
-  contacts: Record<string, unknown>;
   review: Record<string, unknown>;
 }
 
 const DEFAULT_DATA: OnboardingData = {
+  connect: {},
   calendar: {
     events: [],
   },
@@ -106,13 +101,6 @@ const DEFAULT_DATA: OnboardingData = {
     weatherSensitive: false,
     rainAlternative: "",
   },
-  openhouse: {
-    day: "",
-    startTime: "",
-    endTime: "",
-    note: "",
-  },
-  contacts: {},
   review: {},
 };
 

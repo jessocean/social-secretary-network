@@ -135,7 +135,7 @@ export default function FriendsPage() {
             </p>
           </div>
           <Button
-            className="bg-gradient-to-r from-indigo-500 to-violet-500 text-white hover:from-indigo-600 hover:to-violet-600"
+            className="bg-gray-900 text-white hover:bg-gray-800"
             size="sm"
             onClick={() => setInviteOpen(true)}
           >
@@ -169,7 +169,7 @@ export default function FriendsPage() {
             <TabsTrigger value="pending" className="flex-1">
               Pending
               {pendingCount > 0 && (
-                <span className="ml-1.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-amber-500 px-1 text-[10px] font-semibold text-white">
+                <span className="ml-1.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-gray-700 px-1 text-[10px] font-semibold text-white">
                   {pendingCount}
                 </span>
               )}
@@ -177,7 +177,7 @@ export default function FriendsPage() {
             <TabsTrigger value="calendar_only" className="flex-1">
               Calendar Only
               {calendarOnlyCount > 0 && (
-                <span className="ml-1.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-blue-500 px-1 text-[10px] font-semibold text-white">
+                <span className="ml-1.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-gray-500 px-1 text-[10px] font-semibold text-white">
                   {calendarOnlyCount}
                 </span>
               )}
@@ -251,8 +251,8 @@ function FriendList({
   if (friends.length === 0) {
     return (
       <div className="flex flex-col items-center gap-4 py-16">
-        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-indigo-100">
-          <Users className="h-8 w-8 text-indigo-400" />
+        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gray-100">
+          <Users className="h-8 w-8 text-gray-400" />
         </div>
         <div className="text-center">
           <p className="text-sm font-medium text-gray-700">
