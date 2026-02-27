@@ -15,6 +15,7 @@ import {
   Check,
   X,
   MessageCircle,
+  Loader2,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -129,7 +130,8 @@ export function ProposalCard({
   const timeStr = `${format(startDate, "h:mm a")} - ${format(endDate, "h:mm a")}`;
 
   const isPending = proposal.status === "proposed" || proposal.status === "draft";
-  const isConfirmed = proposal.status === "confirmed" || proposal.status === "accepted";
+  const isAccepted = proposal.status === "accepted";
+  const isConfirmed = proposal.status === "confirmed";
 
   return (
     <Card className="gap-0 overflow-hidden py-0">
@@ -222,6 +224,13 @@ export function ProposalCard({
                 Decline
               </Button>
             </>
+          )}
+
+          {isAccepted && (
+            <div className="flex w-full items-center gap-2 rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-xs text-gray-500">
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              Waiting for the other party to confirm
+            </div>
           )}
 
           {isConfirmed && (

@@ -64,19 +64,6 @@ const INITIAL_PROPOSALS: Proposal[] = [
     ],
   },
   {
-    id: "p3",
-    type: "dinner",
-    title: "Dinner with Carol",
-    description: "Try the new spot on Divisadero.",
-    locationName: "Nopalito",
-    startTime: makeTime(4, 19),
-    endTime: makeTime(4, 21),
-    status: "proposed",
-    participants: [
-      { name: "Carol Johnson", response: "pending" },
-    ],
-  },
-  {
     id: "p4",
     type: "playdate_home",
     title: "Playdate at your place",
@@ -95,8 +82,19 @@ const INITIAL_PROPOSALS: Proposal[] = [
 // Component
 // ---------------------------------------------------------------------------
 
+const STORAGE_KEY = "ssn-proposals";
+
+function loadProposals(): Proposal[] {
+  if (typeof window === "undefined") return INITIAL_PROPOSALS;
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored) return JSON.parse(stored);
+  } catch {}
+  return INITIAL_PROPOSALS;
+}
+
 export default function ProposalsPage() {
-  const [proposals, setProposals] = useState<Proposal[]>(INITIAL_PROPOSALS);
+  const [proposals, setProposals] = useState<Proposal[]>(loadProposals);
   const [refreshing, setRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState("proposed");
   const [messageSent, setMessageSent] = useState<Record<string, boolean>>({});
@@ -105,6 +103,13 @@ export default function ProposalsPage() {
     proposal: Proposal | null;
     friendName: string;
   }>({ open: false, proposal: null, friendName: "" });
+
+  // Persist proposals to localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(proposals));
+    } catch {}
+  }, [proposals]);
 
   // Filter proposals by tab
   const proposed = proposals.filter(
@@ -287,8 +292,7 @@ export default function ProposalsPage() {
                 <Card key={p.id} className="gap-0 border py-0">
                   <CardContent className="p-4">
                     <ProposalCard
-                      proposal={{ ...p, status: "proposed" }}
-                      onSendMessage={handleSendMessage}
+                      proposal={p}
                       onCancel={handleCancel}
                     />
 

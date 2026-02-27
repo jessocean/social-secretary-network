@@ -172,7 +172,7 @@ export function LocationPicker({ data, onChange, onNext, onBack }: LocationPicke
               <div className="flex flex-col">
                 <Label className="text-sm">Hosting OK</Label>
                 <span className="text-xs text-muted-foreground">
-                  Can you host playdates here?
+                  Are you OK hosting people here?
                 </span>
               </div>
               <Switch

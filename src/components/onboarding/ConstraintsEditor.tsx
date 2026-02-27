@@ -53,6 +53,7 @@ const TYPE_LABELS: Record<string, string> = {
 
 export function ConstraintsEditor({ data, onChange, onNext, onBack }: ConstraintsEditorProps) {
   const [showAdd, setShowAdd] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [newType, setNewType] = useState<string>("nap");
   const [newLabel, setNewLabel] = useState("");
   const [newDays, setNewDays] = useState<string[]>([]);
@@ -64,6 +65,43 @@ export function ConstraintsEditor({ data, onChange, onNext, onBack }: Constraint
       ...data,
       items: data.items.filter((c) => c.id !== id),
     });
+  };
+
+  const startEditing = (constraint: Constraint) => {
+    setEditingId(constraint.id);
+    setNewType(constraint.type);
+    setNewLabel(constraint.label);
+    setNewDays([...constraint.days]);
+    setNewStartTime(constraint.startTime);
+    setNewEndTime(constraint.endTime);
+  };
+
+  const saveEdit = () => {
+    if (!editingId) return;
+    onChange({
+      ...data,
+      items: data.items.map((c) =>
+        c.id === editingId
+          ? {
+              ...c,
+              type: newType as Constraint["type"],
+              label: newLabel || TYPE_LABELS[newType] || "Custom",
+              days: newDays.length > 0 ? newDays : ["mon", "tue", "wed", "thu", "fri", "sat", "sun"],
+              startTime: newStartTime,
+              endTime: newEndTime,
+            }
+          : c
+      ),
+    });
+    cancelEdit();
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+    setNewLabel("");
+    setNewDays([]);
+    setNewStartTime("13:00");
+    setNewEndTime("15:00");
   };
 
   const addConstraint = () => {
@@ -104,41 +142,137 @@ export function ConstraintsEditor({ data, onChange, onNext, onBack }: Constraint
       {/* Existing constraints */}
       <div className="flex flex-col gap-2">
         {data.items.map((constraint) => (
-          <Card key={constraint.id} className="border">
-            <CardContent className="flex items-start justify-between py-3">
-              <div className="flex items-start gap-3">
-                <div className="mt-0.5 flex h-8 w-8 items-center justify-center rounded-lg bg-gray-100 text-gray-600">
-                  {TYPE_ICONS[constraint.type] || <Moon className="h-4 w-4" />}
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-sm font-medium text-gray-900">
-                    {constraint.label}
-                  </span>
-                  <span className="text-xs text-muted-foreground">
-                    {constraint.startTime} - {constraint.endTime}
-                  </span>
-                  <div className="mt-1 flex flex-wrap gap-1">
-                    {constraint.days.map((day) => (
-                      <span
-                        key={day}
-                        className="rounded bg-gray-100 px-1.5 py-0.5 text-[10px] font-medium text-gray-600"
-                      >
-                        {day.charAt(0).toUpperCase() + day.slice(1)}
-                      </span>
-                    ))}
+          <div key={constraint.id}>
+            {editingId === constraint.id ? (
+              /* Inline edit form */
+              <Card className="border-2 border-gray-300 bg-gray-50">
+                <CardContent className="flex flex-col gap-4 py-4">
+                  <div className="flex gap-3">
+                    <div className="flex-1">
+                      <Label className="text-xs">Type</Label>
+                      <Select value={newType} onValueChange={setNewType}>
+                        <SelectTrigger className="mt-1 bg-white">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="sleep">Sleep</SelectItem>
+                          <SelectItem value="nap">Nap time</SelectItem>
+                          <SelectItem value="work">Work</SelectItem>
+                          <SelectItem value="custom">Custom</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="flex-1">
+                      <Label className="text-xs">Label</Label>
+                      <Input
+                        className="mt-1 bg-white"
+                        placeholder={TYPE_LABELS[newType]}
+                        value={newLabel}
+                        onChange={(e) => setNewLabel(e.target.value)}
+                      />
+                    </div>
                   </div>
-                </div>
-              </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 text-gray-400 hover:text-red-500"
-                onClick={() => removeConstraint(constraint.id)}
+
+                  <div className="flex gap-3">
+                    <div className="flex-1">
+                      <Label className="text-xs">Start</Label>
+                      <Input
+                        type="time"
+                        className="mt-1 bg-white"
+                        value={newStartTime}
+                        onChange={(e) => setNewStartTime(e.target.value)}
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <Label className="text-xs">End</Label>
+                      <Input
+                        type="time"
+                        className="mt-1 bg-white"
+                        value={newEndTime}
+                        onChange={(e) => setNewEndTime(e.target.value)}
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label className="text-xs">Days</Label>
+                    <div className="mt-1.5 flex flex-wrap gap-2">
+                      {DAYS.map((day) => (
+                        <label key={day.value} className="flex items-center gap-1.5">
+                          <Checkbox
+                            checked={newDays.includes(day.value)}
+                            onCheckedChange={() => toggleDay(day.value)}
+                          />
+                          <span className="text-xs">{day.label}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={cancelEdit}
+                      className="flex-1"
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      size="sm"
+                      onClick={saveEdit}
+                      className="flex-1 bg-gray-900 text-white hover:bg-gray-800"
+                    >
+                      Save
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ) : (
+              /* Display card — click to edit */
+              <Card
+                className="cursor-pointer border transition-colors hover:border-gray-300"
+                onClick={() => startEditing(constraint)}
               >
-                <X className="h-4 w-4" />
-              </Button>
-            </CardContent>
-          </Card>
+                <CardContent className="flex items-start justify-between py-3">
+                  <div className="flex items-start gap-3">
+                    <div className="mt-0.5 flex h-8 w-8 items-center justify-center rounded-lg bg-gray-100 text-gray-600">
+                      {TYPE_ICONS[constraint.type] || <Moon className="h-4 w-4" />}
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-sm font-medium text-gray-900">
+                        {constraint.label}
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        {constraint.startTime} - {constraint.endTime}
+                      </span>
+                      <div className="mt-1 flex flex-wrap gap-1">
+                        {constraint.days.map((day) => (
+                          <span
+                            key={day}
+                            className="rounded bg-gray-100 px-1.5 py-0.5 text-[10px] font-medium text-gray-600"
+                          >
+                            {day.charAt(0).toUpperCase() + day.slice(1)}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-gray-400 hover:text-red-500"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      removeConstraint(constraint.id);
+                    }}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+          </div>
         ))}
       </div>
 
@@ -231,14 +365,19 @@ export function ConstraintsEditor({ data, onChange, onNext, onBack }: Constraint
           </CardContent>
         </Card>
       ) : (
-        <Button
-          variant="outline"
-          onClick={() => setShowAdd(true)}
-          className="border-dashed"
-        >
-          <Plus className="mr-2 h-4 w-4" />
-          Add constraint
-        </Button>
+        <div className="flex flex-col gap-2">
+          <Button
+            variant="outline"
+            onClick={() => setShowAdd(true)}
+            className="border-dashed"
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            Add constraint
+          </Button>
+          <p className="text-xs text-muted-foreground text-center">
+            e.g. children&apos;s naptimes, picking kids up from daycare, kids&apos; bedtime, sabbath &mdash; no driving
+          </p>
+        </div>
       )}
 
       {/* Transit buffer slider */}

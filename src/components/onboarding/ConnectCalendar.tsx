@@ -2,7 +2,13 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { CalendarDays, Check, Loader2 } from "lucide-react";
+import { CalendarDays, Check, Loader2, HelpCircle } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface ConnectCalendarProps {
   onNext: () => void;
@@ -37,9 +43,26 @@ export function ConnectCalendar({ onNext }: ConnectCalendarProps) {
           We&apos;ll read your calendar to find the best times for social plans.
           Nothing is shared without your approval.
         </p>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button className="mx-auto mt-3 flex items-center gap-1 text-xs text-muted-foreground hover:text-gray-700">
+                <HelpCircle className="h-3.5 w-3.5" />
+                Why do you need this?
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="bottom" className="max-w-xs text-center">
+              <p>
+                Social Secretary uses your calendar to negotiate on your behalf
+                with other people&apos;s calendars to plan social engagements.
+                Without calendar access, the app can&apos;t work.
+              </p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       </div>
 
-      <div className="w-full space-y-3">
+      <div className="w-full">
         <Button
           onClick={handleConnect}
           disabled={connecting || connected}
@@ -63,15 +86,6 @@ export function ConnectCalendar({ onNext }: ConnectCalendarProps) {
             </>
           )}
         </Button>
-
-        {!connected && (
-          <button
-            onClick={onNext}
-            className="block w-full text-center text-sm text-muted-foreground hover:text-gray-700"
-          >
-            Skip for now
-          </button>
-        )}
       </div>
     </div>
   );
