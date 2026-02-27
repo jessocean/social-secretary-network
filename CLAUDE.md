@@ -5,10 +5,12 @@ AI-powered social scheduling PWA where "secretary" agents negotiate hangouts bet
 
 ## Quick Start
 ```bash
-npm run dev -- -p 3002   # dev server (port 3000 may be in use)
-npm test                  # 31 unit tests (vitest)
-npm run seed              # seed DB with 4 test users (requires local Supabase)
-npm run build             # production build
+npm run dev -- -p 3002      # dev server (port 3000 may be in use)
+npm test                     # 31 unit tests (vitest)
+npm run test:integration     # 11 integration tests (requires DB)
+npm run test:all             # all tests (unit + integration)
+npm run seed                 # seed DB with 4 test users
+npm run build                # production build
 ```
 
 ## Tech Stack
@@ -33,18 +35,27 @@ All in `src/lib/agent/` — zero DB access, fully unit-testable:
 2. **scorer.ts** - `scoreSlot()`, `rankSlots()` with 7 weighted factors
 3. **negotiator.ts** - `negotiate()` greedy selection respecting caps + no double-booking
 
+### Negotiation Service (DB-Backed)
+`src/lib/services/negotiation-service.ts` — loads data from DB, feeds agent engine, persists results:
+1. Loads eligible users (onboarding complete), calendar events, constraints, preferences, friendships, locations
+2. Maps DB rows → agent types, calls `computeWeekAvailability()` → `negotiate()`
+3. Persists to `negotiations`, `proposals`, `proposalParticipants` tables
+4. API route (`/api/agent/negotiate`) tries DB first, falls back to inline mock data
+
 ### Auth
 Dev mode (`AUTH_MODE=dev`): any 6-digit OTP code works. No Supabase needed.
 Production: would use Supabase Phone OTP (not yet wired).
 
 ### Database
-Schema at `src/lib/db/schema.ts` — 12 tables with Drizzle. Currently all UI uses inline mock data and doesn't require a running database.
+Schema at `src/lib/db/schema.ts` — 12 tables with Drizzle. Cloud Supabase project (`social-secretary-app`, ref `tfwyrtkopvncsgxxnlpm`, region us-west-2). Schema pushed via `npm run db:push`, seeded via `npm run seed`. UI pages still use inline mock data.
 
 ## What's Done
 - Full UI: landing, login, verify, onboarding (7 steps), dashboard, proposals, coordination, friends, settings, invite landing page
 - Agent engine: scheduler, scorer, negotiator
+- Negotiation service: DB-backed load → negotiate → persist pipeline
 - Mock calendar with 4 test personas
-- 31 passing unit tests
+- 31 passing unit tests + 11 integration tests
+- Cloud Supabase with seeded data (Alice, Bob, Carol, Dave)
 - Seed script for 4 users
 - PWA manifest + service worker
 - Proposal state persists to localStorage
@@ -55,7 +66,7 @@ Schema at `src/lib/db/schema.ts` — 12 tables with Drizzle. Currently all UI us
 - Real SMS OTP (Twilio)
 - Weather API integration
 - Push notifications
-- Vercel deployment + cloud Supabase
+- Vercel deployment
 - Auth middleware (pages don't gate on login yet)
 - Database integration for UI pages (all use inline mock data)
 - Native app conversion (Capacitor)
@@ -66,6 +77,7 @@ Schema at `src/lib/db/schema.ts` — 12 tables with Drizzle. Currently all UI us
 | `src/lib/db/schema.ts` | Drizzle schema (12 tables, all enums) |
 | `src/lib/agent/types.ts` | Types for negotiation engine |
 | `src/lib/agent/negotiator.ts` | Top-level negotiate() orchestrator |
+| `src/lib/services/negotiation-service.ts` | DB-backed negotiation pipeline |
 | `src/lib/calendar/mock.ts` | Mock calendar with 4 personas |
 | `src/hooks/useOnboarding.ts` | Onboarding wizard state management |
 | `scripts/seed-dev.ts` | Dev seed script (4 users) |
@@ -75,7 +87,7 @@ Schema at `src/lib/db/schema.ts` — 12 tables with Drizzle. Currently all UI us
 See `.env.example`. Key vars:
 - `CALENDAR_MODE=mock` — which calendar implementation to use
 - `AUTH_MODE=dev` — enables dev OTP (any code works)
-- `DATABASE_URL` — Postgres connection (only needed for seed script)
+- `DATABASE_URL` — Postgres connection (needed for seed, integration tests, and DB-backed negotiation)
 
 ## Prototype Feedback Changes
 

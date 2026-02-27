@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { runNegotiation } from "@/lib/services/negotiation-service";
 import { negotiate } from "@/lib/agent/negotiator";
 import { computeWeekAvailability } from "@/lib/agent/scheduler";
 import { getCalendarService } from "@/lib/calendar/factory";
@@ -12,7 +13,7 @@ import type {
 import { startOfWeek, addDays } from "date-fns";
 
 // ---------------------------------------------------------------------------
-// Mock user data for development
+// Mock fallback data (used when DB is unavailable)
 // ---------------------------------------------------------------------------
 
 const MOCK_USERS = [
@@ -128,6 +129,74 @@ const MOCK_LOCATIONS = [
 ];
 
 // ---------------------------------------------------------------------------
+// Mock fallback negotiation (no DB required)
+// ---------------------------------------------------------------------------
+
+async function negotiateWithMockData(weekStartDate: Date, weekEndDate: Date) {
+  const calendarService = getCalendarService();
+  const mockService = calendarService as MockCalendarService;
+
+  for (const user of MOCK_USERS) {
+    if (typeof mockService.loadPersona === "function") {
+      mockService.loadPersona(user.id, user.persona);
+    }
+  }
+
+  const userAvailabilities: UserAvailability[] = [];
+
+  for (const user of MOCK_USERS) {
+    const events = await calendarService.getEvents(
+      user.id,
+      weekStartDate,
+      weekEndDate
+    );
+    const constraints = MOCK_CONSTRAINTS[user.id] ?? [];
+    const prefs = MOCK_PREFS[user.id];
+    const bufferMinutes = prefs?.bufferMinutes ?? 30;
+
+    const freeSlots = computeWeekAvailability(
+      events,
+      constraints,
+      weekStartDate,
+      bufferMinutes
+    );
+
+    for (const slot of freeSlots) {
+      slot.userId = user.id;
+    }
+
+    userAvailabilities.push({
+      userId: user.id,
+      freeSlots,
+      constraints,
+    });
+  }
+
+  const preferencesMap = new Map<string, UserPrefs>();
+  for (const [userId, prefs] of Object.entries(MOCK_PREFS)) {
+    preferencesMap.set(userId, prefs);
+  }
+
+  const params: NegotiationParams = {
+    users: userAvailabilities,
+    preferences: preferencesMap,
+    friendships: MOCK_FRIENDSHIPS,
+    locations: MOCK_LOCATIONS,
+    weekStart: weekStartDate,
+    engagementTypes: [
+      "coffee",
+      "playground",
+      "playdate_home",
+      "dinner",
+      "park",
+      "walk",
+    ],
+  };
+
+  return negotiate(params);
+}
+
+// ---------------------------------------------------------------------------
 // POST handler
 // ---------------------------------------------------------------------------
 
@@ -136,83 +205,31 @@ export async function POST(request: NextRequest) {
     const body = await request.json().catch(() => ({}));
     const weekStartStr = body.weekStart as string | undefined;
 
-    // Determine the week start date
     const weekStartDate = weekStartStr
       ? startOfWeek(new Date(weekStartStr), { weekStartsOn: 1 })
       : startOfWeek(new Date(), { weekStartsOn: 1 });
 
     const weekEndDate = addDays(weekStartDate, 7);
 
-    // Load mock calendar data and compute availability
-    const calendarService = getCalendarService();
-    const mockService = calendarService as MockCalendarService;
+    // Try DB-backed negotiation first, fall back to mock data
+    let result;
+    let negotiationId: string | undefined;
+    let source: "db" | "mock";
 
-    // Load personas for each mock user
-    for (const user of MOCK_USERS) {
-      if (typeof mockService.loadPersona === "function") {
-        mockService.loadPersona(user.id, user.persona);
-      }
+    try {
+      const dbResult = await runNegotiation(weekStartDate, weekEndDate);
+      result = dbResult.result;
+      negotiationId = dbResult.negotiationId;
+      source = "db";
+    } catch {
+      result = await negotiateWithMockData(weekStartDate, weekEndDate);
+      source = "mock";
     }
-
-    // Compute availability for each user
-    const userAvailabilities: UserAvailability[] = [];
-
-    for (const user of MOCK_USERS) {
-      const events = await calendarService.getEvents(
-        user.id,
-        weekStartDate,
-        weekEndDate
-      );
-      const constraints = MOCK_CONSTRAINTS[user.id] ?? [];
-      const prefs = MOCK_PREFS[user.id];
-      const bufferMinutes = prefs?.bufferMinutes ?? 30;
-
-      const freeSlots = computeWeekAvailability(
-        events,
-        constraints,
-        weekStartDate,
-        bufferMinutes
-      );
-
-      // Tag free slots with userId
-      for (const slot of freeSlots) {
-        slot.userId = user.id;
-      }
-
-      userAvailabilities.push({
-        userId: user.id,
-        freeSlots,
-        constraints,
-      });
-    }
-
-    // Build preferences map
-    const preferencesMap = new Map<string, UserPrefs>();
-    for (const [userId, prefs] of Object.entries(MOCK_PREFS)) {
-      preferencesMap.set(userId, prefs);
-    }
-
-    // Run the negotiation engine
-    const params: NegotiationParams = {
-      users: userAvailabilities,
-      preferences: preferencesMap,
-      friendships: MOCK_FRIENDSHIPS,
-      locations: MOCK_LOCATIONS,
-      weekStart: weekStartDate,
-      engagementTypes: [
-        "coffee",
-        "playground",
-        "playdate_home",
-        "dinner",
-        "park",
-        "walk",
-      ],
-    };
-
-    const result = negotiate(params);
 
     return NextResponse.json({
       success: true,
+      source,
+      negotiationId,
       proposals: result.proposals.map((p) => ({
         type: p.type,
         title: p.title,
