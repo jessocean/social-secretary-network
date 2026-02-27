@@ -39,6 +39,8 @@ export interface Location {
   type: "home" | "playground" | "cafe" | "park" | "other";
   address: string;
   hostingOk: boolean;
+  lat?: number;
+  lng?: number;
 }
 
 export interface OnboardingData {
@@ -157,6 +159,11 @@ export function useOnboarding() {
       if (!res.ok) {
         throw new Error("Failed to save onboarding data");
       }
+
+      // Also persist to localStorage so negotiate API can use it
+      try {
+        localStorage.setItem("ssn-onboarding", JSON.stringify(data));
+      } catch {}
 
       return true;
     } catch (err) {

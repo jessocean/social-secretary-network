@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { runNegotiation } from "@/lib/services/negotiation-service";
+import {
+  runNegotiation,
+  loadEligibleUsers,
+} from "@/lib/services/negotiation-service";
 import { negotiate } from "@/lib/agent/negotiator";
 import { computeWeekAvailability } from "@/lib/agent/scheduler";
 import { getCalendarService } from "@/lib/calendar/factory";
@@ -132,7 +135,20 @@ const MOCK_LOCATIONS = [
 // Mock fallback negotiation (no DB required)
 // ---------------------------------------------------------------------------
 
-async function negotiateWithMockData(weekStartDate: Date, weekEndDate: Date) {
+interface UserLocationInput {
+  label: string;
+  type: string;
+  address?: string;
+  lat?: number;
+  lng?: number;
+  hostingOk?: boolean;
+}
+
+async function negotiateWithMockData(
+  weekStartDate: Date,
+  weekEndDate: Date,
+  userLocations?: UserLocationInput[]
+) {
   const calendarService = getCalendarService();
   const mockService = calendarService as MockCalendarService;
 
@@ -177,11 +193,22 @@ async function negotiateWithMockData(weekStartDate: Date, weekEndDate: Date) {
     preferencesMap.set(userId, prefs);
   }
 
+  // Use user-provided locations if available, otherwise fall back to mock
+  const locations =
+    userLocations && userLocations.length > 0
+      ? userLocations.map((loc, i) => ({
+          userId: "user-jessica",
+          locationName: loc.label,
+          locationId: `user-loc-${i}`,
+          travelMinutes: 10,
+        }))
+      : MOCK_LOCATIONS;
+
   const params: NegotiationParams = {
     users: userAvailabilities,
     preferences: preferencesMap,
     friendships: MOCK_FRIENDSHIPS,
-    locations: MOCK_LOCATIONS,
+    locations,
     weekStart: weekStartDate,
     engagementTypes: [
       "coffee",
@@ -204,6 +231,8 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json().catch(() => ({}));
     const weekStartStr = body.weekStart as string | undefined;
+    const userLocations = body.userLocations as UserLocationInput[] | undefined;
+    const currentUserId = request.cookies.get("session_user_id")?.value;
 
     const weekStartDate = weekStartStr
       ? startOfWeek(new Date(weekStartStr), { weekStartsOn: 1 })
@@ -222,25 +251,58 @@ export async function POST(request: NextRequest) {
       negotiationId = dbResult.negotiationId;
       source = "db";
     } catch {
-      result = await negotiateWithMockData(weekStartDate, weekEndDate);
+      result = await negotiateWithMockData(weekStartDate, weekEndDate, userLocations);
       source = "mock";
+    }
+
+    // Build a user ID → display name map for the response
+    const nameMap = new Map<string, string>();
+    if (source === "db") {
+      try {
+        const dbUsers = await loadEligibleUsers();
+        for (const u of dbUsers) {
+          nameMap.set(u.id, u.displayName ?? u.phone);
+        }
+      } catch {}
+    }
+    for (const u of MOCK_USERS) {
+      nameMap.set(u.id, u.name);
     }
 
     return NextResponse.json({
       success: true,
       source,
       negotiationId,
-      proposals: result.proposals.map((p) => ({
-        type: p.type,
-        title: p.title,
-        locationName: p.locationName,
-        locationId: p.locationId,
-        participants: p.participants,
-        startTime: p.slot.start.toISOString(),
-        endTime: p.slot.end.toISOString(),
-        score: p.slot.score,
-        scoreBreakdown: p.slot.scoreBreakdown,
-      })),
+      proposals: result.proposals.map((p) => {
+        // Fix title: replace truncated UUIDs with real display names
+        let title = p.title;
+        for (const userId of p.participants) {
+          const truncId = userId.slice(0, 8);
+          const displayName = nameMap.get(userId);
+          if (displayName && title.includes(truncId)) {
+            title = title.replace(truncId, displayName);
+          }
+        }
+
+        const friendParticipants = p.participants
+          .filter((userId) => userId !== currentUserId && userId !== "user-jessica")
+          .map((userId) => ({
+            userId,
+            name: nameMap.get(userId) ?? userId,
+          }));
+
+        return {
+          type: p.type,
+          title,
+          locationName: p.locationName,
+          locationId: p.locationId,
+          participants: friendParticipants,
+          startTime: p.slot.start.toISOString(),
+          endTime: p.slot.end.toISOString(),
+          score: p.slot.score,
+          scoreBreakdown: p.slot.scoreBreakdown,
+        };
+      }),
       log: result.log,
       weekStart: weekStartDate.toISOString(),
     });

@@ -70,10 +70,18 @@ export function PreferencesEditor({ data, onChange, onNext, onBack }: Preference
           {ENGAGEMENT_TYPES.map((type) => {
             const isSelected = data.engagementTypes.includes(type.value);
             return (
-              <button
+              <div
                 key={type.value}
+                role="button"
+                tabIndex={0}
                 onClick={() => toggleEngagementType(type.value)}
-                className={`flex items-center gap-2.5 rounded-xl border-2 px-3 py-2.5 text-left text-sm transition-colors ${
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    toggleEngagementType(type.value);
+                  }
+                }}
+                className={`flex cursor-pointer items-center gap-2.5 rounded-xl border-2 px-3 py-2.5 text-left text-sm transition-colors ${
                   isSelected
                     ? "border-gray-400 bg-gray-100 text-gray-900"
                     : "border-gray-200 bg-white text-gray-700 hover:border-gray-300"
@@ -86,7 +94,7 @@ export function PreferencesEditor({ data, onChange, onNext, onBack }: Preference
                 />
                 <type.icon className="h-4 w-4 shrink-0" />
                 <span className="text-xs font-medium">{type.label}</span>
-              </button>
+              </div>
             );
           })}
         </div>

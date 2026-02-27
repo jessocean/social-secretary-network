@@ -58,14 +58,60 @@ export default function DashboardPage() {
   const handleGenerate = async () => {
     setGenerating(true);
     try {
+      // Read user's onboarding locations from localStorage
+      let userLocations;
+      try {
+        const onboarding = JSON.parse(
+          localStorage.getItem("ssn-onboarding") || "{}"
+        );
+        userLocations = onboarding.locations?.items;
+      } catch {}
+
       const res = await fetch("/api/agent/negotiate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ weekStart: weekStart.toISOString() }),
+        body: JSON.stringify({
+          weekStart: weekStart.toISOString(),
+          userLocations,
+        }),
       });
       if (!res.ok) throw new Error("Failed to generate proposals");
       const data = await res.json();
-      toast.success(`Generated ${data.proposals?.length ?? 0} new proposals!`);
+
+      // Save proposals to localStorage so the proposals page picks them up
+      if (data.proposals?.length > 0) {
+        const proposals = data.proposals.map(
+          (p: {
+            type: string;
+            title: string;
+            locationName: string;
+            startTime: string;
+            endTime: string;
+            score?: number;
+            participants: { userId: string; name?: string }[];
+          }, i: number) => ({
+            id: `gen-${Date.now()}-${i}`,
+            type: p.type,
+            title: p.title,
+            description: `${p.type} at ${p.locationName}`,
+            locationName: p.locationName,
+            startTime: p.startTime,
+            endTime: p.endTime,
+            status: "proposed",
+            participants: p.participants.map(
+              (part: { userId: string; name?: string }) => ({
+                name: part.name || part.userId,
+                response: "pending",
+              })
+            ),
+          })
+        );
+        localStorage.setItem("ssn-proposals", JSON.stringify(proposals));
+      }
+
+      toast.success(
+        `Generated ${data.proposals?.length ?? 0} new proposals! View them on the Proposals page.`
+      );
     } catch {
       toast.error("Could not generate proposals. Try again.");
     } finally {

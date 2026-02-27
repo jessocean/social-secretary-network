@@ -14,6 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Plus, X, MapPin, Home, TreePine, Coffee } from "lucide-react";
+import { AddressAutocomplete } from "@/components/ui/address-autocomplete";
 import type { Location } from "@/hooks/useOnboarding";
 
 interface LocationPickerProps {
@@ -44,6 +45,8 @@ export function LocationPicker({ data, onChange, onNext, onBack }: LocationPicke
   const [newLabel, setNewLabel] = useState("");
   const [newType, setNewType] = useState("home");
   const [newAddress, setNewAddress] = useState("");
+  const [newLat, setNewLat] = useState<number | undefined>();
+  const [newLng, setNewLng] = useState<number | undefined>();
   const [newHostingOk, setNewHostingOk] = useState(false);
 
   const addLocation = () => {
@@ -55,6 +58,8 @@ export function LocationPicker({ data, onChange, onNext, onBack }: LocationPicke
       type: newType as Location["type"],
       address: newAddress.trim(),
       hostingOk: newHostingOk,
+      lat: newLat,
+      lng: newLng,
     };
 
     onChange({ items: [...data.items, location] });
@@ -62,6 +67,8 @@ export function LocationPicker({ data, onChange, onNext, onBack }: LocationPicke
     setNewLabel("");
     setNewType("home");
     setNewAddress("");
+    setNewLat(undefined);
+    setNewLng(undefined);
     setNewHostingOk(false);
   };
 
@@ -160,11 +167,21 @@ export function LocationPicker({ data, onChange, onNext, onBack }: LocationPicke
 
             <div>
               <Label className="text-xs">Address</Label>
-              <Input
-                className="mt-1 bg-white"
-                placeholder="Enter a full address (e.g., 123 Main St, San Francisco)"
+              <AddressAutocomplete
+                className="mt-1"
+                placeholder="Search for an address (e.g., 123 Main St, San Francisco)"
                 value={newAddress}
-                onChange={(e) => setNewAddress(e.target.value)}
+                onChange={(val) => {
+                  setNewAddress(val);
+                  // Clear lat/lng when user edits text manually
+                  setNewLat(undefined);
+                  setNewLng(undefined);
+                }}
+                onSelect={({ address, lat, lng }) => {
+                  setNewAddress(address);
+                  setNewLat(lat);
+                  setNewLng(lng);
+                }}
               />
             </div>
 

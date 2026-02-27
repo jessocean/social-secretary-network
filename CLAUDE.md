@@ -59,6 +59,9 @@ Schema at `src/lib/db/schema.ts` — 12 tables with Drizzle. Cloud Supabase proj
 - Seed script for 4 users
 - PWA manifest + service worker
 - Proposal state persists to localStorage
+- Location autocomplete via Nominatim (OpenStreetMap) in onboarding
+- Onboarding → DB sync (locations, constraints, preferences persisted on complete)
+- Dashboard → Proposals data flow via localStorage + negotiate API
 
 ## What's NOT Done Yet
 - Playwright E2E tests
@@ -68,7 +71,6 @@ Schema at `src/lib/db/schema.ts` — 12 tables with Drizzle. Cloud Supabase proj
 - Push notifications
 - Vercel deployment
 - Auth middleware (pages don't gate on login yet)
-- Database integration for UI pages (all use inline mock data)
 - Native app conversion (Capacitor)
 
 ## Key Files
@@ -80,6 +82,9 @@ Schema at `src/lib/db/schema.ts` — 12 tables with Drizzle. Cloud Supabase proj
 | `src/lib/services/negotiation-service.ts` | DB-backed negotiation pipeline |
 | `src/lib/calendar/mock.ts` | Mock calendar with 4 personas |
 | `src/hooks/useOnboarding.ts` | Onboarding wizard state management |
+| `src/hooks/useAddressSearch.ts` | Debounced Nominatim geocoding hook |
+| `src/components/ui/address-autocomplete.tsx` | Address autocomplete dropdown |
+| `src/app/api/geocode/search/route.ts` | Nominatim proxy with rate limiting |
 | `scripts/seed-dev.ts` | Dev seed script (4 users) |
 | `docs/SPEC.md` | Full product spec |
 
@@ -110,6 +115,20 @@ See `.env.example`. Key vars:
 - Removed Carol (pending friend) from proposals — only confirmed friends get proposals
 - Persisted proposal state to localStorage
 - Created settings page with "Delete my account" flow
+
+### Round 3 (location autocomplete + DB sync)
+- Added Nominatim (OpenStreetMap) address autocomplete to LocationPicker onboarding step
+  - API proxy at `/api/geocode/search` with rate limiting (1 req/sec) and US bias
+  - Debounced search hook (`useAddressSearch`) with AbortController
+  - Reusable `AddressAutocomplete` component with dropdown, loading spinner, click-outside
+  - Captures lat/lng from geocoding results into Location objects
+- Fixed onboarding → DB persistence: `/api/onboarding/complete` now saves locations, constraints, preferences to Postgres (was a stub)
+- Fixed proposal generation data flow: Dashboard saves API results to localStorage, Proposals page reads them
+- Fixed Proposals page refresh button to actually call the negotiate API
+- Fixed negotiate API to accept user locations in request body for mock fallback
+- Fixed participant names: API now maps DB UUIDs to display names (was showing truncated UUIDs)
+- Fixed title generation: replaces truncated UUIDs with real names in proposal titles
+- Fixed nested `<button>` hydration error in PreferencesEditor (Checkbox inside button → div with role="button")
 
 ## Conventions
 - Mobile-first, monochrome theme (gray-900 primary, no color accents)

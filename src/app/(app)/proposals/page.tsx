@@ -187,9 +187,66 @@ export default function ProposalsPage() {
 
   const handleRefresh = async () => {
     setRefreshing(true);
-    await new Promise((r) => setTimeout(r, 1000));
-    setRefreshing(false);
-    toast.success("Proposals refreshed.");
+    try {
+      const weekStart = startOfWeek(new Date(), { weekStartsOn: 1 });
+
+      // Read user's onboarding locations from localStorage
+      let userLocations;
+      try {
+        const onboarding = JSON.parse(
+          localStorage.getItem("ssn-onboarding") || "{}"
+        );
+        userLocations = onboarding.locations?.items;
+      } catch {}
+
+      const res = await fetch("/api/agent/negotiate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          weekStart: weekStart.toISOString(),
+          userLocations,
+        }),
+      });
+
+      if (!res.ok) throw new Error("Failed to refresh");
+      const data = await res.json();
+
+      if (data.proposals?.length > 0) {
+        const fresh = data.proposals.map(
+          (p: {
+            type: string;
+            title: string;
+            locationName: string;
+            startTime: string;
+            endTime: string;
+            participants: { userId: string; name?: string }[];
+          }, i: number) => ({
+            id: `gen-${Date.now()}-${i}`,
+            type: p.type,
+            title: p.title,
+            description: `${p.type} at ${p.locationName}`,
+            locationName: p.locationName,
+            startTime: p.startTime,
+            endTime: p.endTime,
+            status: "proposed" as const,
+            participants: p.participants.map(
+              (part: { userId: string; name?: string }) => ({
+                name: part.name || part.userId,
+                response: "pending" as const,
+              })
+            ),
+          })
+        );
+        setProposals(fresh);
+        toast.success(`Refreshed — ${fresh.length} proposals generated.`);
+      } else {
+        toast("No proposals generated for this week.");
+      }
+    } catch {
+      toast.error("Could not refresh proposals. Try again.");
+    } finally {
+      setRefreshing(false);
+    }
   };
 
   const toggleMessageSent = (proposalId: string, participantName: string) => {
