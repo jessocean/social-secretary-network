@@ -3,12 +3,14 @@ import { getCalendarService } from "@/lib/calendar/factory";
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json().catch(() => ({}));
-    const userId = body.userId as string | undefined;
+    // Prefer session cookie; fall back to body for backward compatibility
+    const userId =
+      request.cookies.get("session_user_id")?.value ??
+      ((await request.json().catch(() => ({}))) as { userId?: string }).userId;
 
     if (!userId) {
       return NextResponse.json(
-        { success: false, error: "userId is required" },
+        { success: false, error: "userId is required (cookie or body)" },
         { status: 400 }
       );
     }

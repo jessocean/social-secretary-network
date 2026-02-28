@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from "react";
 import { useRouter } from "next/navigation";
 import { useOnboarding, ONBOARDING_STEPS } from "@/hooks/useOnboarding";
 import { ConnectCalendar } from "@/components/onboarding/ConnectCalendar";
@@ -133,7 +134,9 @@ export default function OnboardingPage() {
       </div>
 
       {/* Step content */}
-      <div className="flex-1 px-4 pb-8">{renderStep()}</div>
+      <div className="flex-1 px-4 pb-8">
+        <Suspense>{renderStep()}</Suspense>
+      </div>
     </div>
   );
 }

@@ -6,8 +6,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ChevronLeft, ChevronRight, Plus, Trash2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus, Trash2, Loader2 } from "lucide-react";
 import type { CalendarEvent } from "@/hooks/useOnboarding";
+
+const CALENDAR_MODE = process.env.NEXT_PUBLIC_CALENDAR_MODE || "mock";
 
 interface CalendarReviewProps {
   data: { events: CalendarEvent[] };
@@ -41,14 +43,68 @@ const MOCK_EVENTS: CalendarEvent[] = [
   { id: "11", title: "Family brunch", day: "sun", startTime: "10:00", endTime: "12:00", isBusy: true },
 ];
 
+const DAY_NAMES = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"] as const;
+
+function formatTime(date: Date): string {
+  return date.toLocaleTimeString("en-US", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  });
+}
+
+function convertSyncedEvents(
+  syncedEvents: Array<{
+    id: string;
+    title: string;
+    startTime: string;
+    endTime: string;
+    isBusy: boolean;
+  }>
+): CalendarEvent[] {
+  return syncedEvents.map((e) => {
+    const start = new Date(e.startTime);
+    const end = new Date(e.endTime);
+    return {
+      id: e.id,
+      title: e.title,
+      day: DAY_NAMES[start.getDay()],
+      startTime: formatTime(start),
+      endTime: formatTime(end),
+      isBusy: e.isBusy,
+    };
+  });
+}
+
 export function CalendarReview({ data, onChange, onNext, onBack }: CalendarReviewProps) {
   const [selectedDay, setSelectedDay] = useState(0);
   const [expandedEventId, setExpandedEventId] = useState<string | null>(null);
   const [showSaveBanner, setShowSaveBanner] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  // Initialize with mock events if empty
+  // Load events: fetch from Google Calendar sync API or use mock events
   useEffect(() => {
-    if (data.events.length === 0) {
+    if (CALENDAR_MODE === "google") {
+      setLoading(true);
+      fetch("/api/calendar/sync", { method: "POST" })
+        .then((r) => r.json())
+        .then((result) => {
+          if (result.success && result.events?.length > 0) {
+            onChange({ events: convertSyncedEvents(result.events) });
+          } else {
+            // No events synced — use mock as placeholder
+            if (data.events.length === 0) {
+              onChange({ events: MOCK_EVENTS });
+            }
+          }
+        })
+        .catch(() => {
+          if (data.events.length === 0) {
+            onChange({ events: MOCK_EVENTS });
+          }
+        })
+        .finally(() => setLoading(false));
+    } else if (data.events.length === 0) {
       onChange({ events: MOCK_EVENTS });
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -153,7 +209,14 @@ export function CalendarReview({ data, onChange, onNext, onBack }: CalendarRevie
 
       {/* Events list */}
       <div className="flex flex-col gap-2">
-        {dayEvents.length === 0 ? (
+        {loading ? (
+          <Card>
+            <CardContent className="flex items-center justify-center gap-2 py-8">
+              <Loader2 className="h-4 w-4 animate-spin text-gray-500" />
+              <p className="text-sm text-muted-foreground">Loading your calendar...</p>
+            </CardContent>
+          </Card>
+        ) : dayEvents.length === 0 ? (
           <Card className="border-dashed">
             <CardContent className="py-8 text-center">
               <p className="text-sm text-muted-foreground">No events this day</p>

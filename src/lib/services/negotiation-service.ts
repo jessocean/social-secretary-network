@@ -28,6 +28,7 @@ import type {
   NegotiationParams,
 } from "@/lib/agent/types";
 import type { CalendarEvent } from "@/lib/calendar/types";
+import { getCalendarService } from "@/lib/calendar/factory";
 import { v4 as uuid } from "uuid";
 
 const ENGAGEMENT_TYPES = [
@@ -187,6 +188,16 @@ export async function runNegotiation(
   }
 
   const eligibleUserIds = eligibleUsers.map((u) => u.id);
+
+  // 1b. Sync calendars for all users (pulls latest from Google if connected)
+  const calendarService = getCalendarService();
+  for (const user of eligibleUsers) {
+    try {
+      await calendarService.syncEvents(user.id);
+    } catch (err) {
+      console.warn(`Calendar sync failed for user ${user.id} (non-fatal):`, err);
+    }
+  }
 
   // 2. Load data for each user
   const userAvailabilities: UserAvailability[] = [];

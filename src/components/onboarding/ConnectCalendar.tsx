@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { CalendarDays, Check, Loader2, HelpCircle } from "lucide-react";
 import {
@@ -15,17 +16,47 @@ interface ConnectCalendarProps {
   onBack: () => void;
 }
 
+const CALENDAR_MODE = process.env.NEXT_PUBLIC_CALENDAR_MODE || "mock";
+
 export function ConnectCalendar({ onNext }: ConnectCalendarProps) {
   const [connecting, setConnecting] = useState(false);
   const [connected, setConnected] = useState(false);
+  const searchParams = useSearchParams();
+
+  // Check if we just returned from Google OAuth
+  useEffect(() => {
+    if (searchParams.get("gcal") === "connected") {
+      setConnected(true);
+      setTimeout(() => onNext(), 800);
+      return;
+    }
+
+    // Check if user already has a connection (google mode only)
+    if (CALENDAR_MODE === "google") {
+      fetch("/api/calendar/status")
+        .then((r) => r.json())
+        .then((data) => {
+          if (data.connected) {
+            setConnected(true);
+            setTimeout(() => onNext(), 800);
+          }
+        })
+        .catch(() => {});
+    }
+  }, [searchParams, onNext]);
 
   const handleConnect = async () => {
+    if (CALENDAR_MODE === "google") {
+      // Redirect to Google OAuth
+      window.location.href = "/api/auth/google/authorize?returnTo=/onboarding";
+      return;
+    }
+
+    // Mock mode: simulate a brief connection
     setConnecting(true);
-    // In mock mode, simulate a brief connection
     await new Promise((r) => setTimeout(r, 1200));
     setConnected(true);
     setConnecting(false);
-    // Auto-advance after showing success
     setTimeout(() => onNext(), 800);
   };
 
