@@ -43,7 +43,7 @@ All in `src/lib/agent/` — zero DB access, fully unit-testable:
 
 ### Auth
 Dev mode (`AUTH_MODE=dev`): any 6-digit OTP code works. No Supabase needed.
-Production: would use Supabase Phone OTP (not yet wired).
+Production (no `AUTH_MODE` or any value other than `dev`): real SMS OTP via Supabase Auth + Twilio. Requires Twilio configured in Supabase Dashboard → Auth → Providers → Phone.
 
 ### Database
 Schema at `src/lib/db/schema.ts` — 12 tables with Drizzle. Cloud Supabase project (`social-secretary-app`, ref `tfwyrtkopvncsgxxnlpm`, region us-west-2). Schema pushed via `npm run db:push`, seeded via `npm run seed`. UI pages still use inline mock data.
@@ -63,10 +63,10 @@ Schema at `src/lib/db/schema.ts` — 12 tables with Drizzle. Cloud Supabase proj
 - Onboarding → DB sync (locations, constraints, preferences persisted on complete)
 - Dashboard → Proposals data flow via localStorage + negotiate API
 - Settings page: calendar connection management (connect/disconnect/re-sync)
+- **Real phone OTP** via Supabase Auth + Twilio (send-otp and verify-otp routes wired up)
 
 ## What's NOT Done Yet
 - Playwright E2E tests
-- Real SMS OTP (Twilio)
 - Weather API integration
 - Push notifications
 - Vercel deployment
@@ -94,7 +94,7 @@ Schema at `src/lib/db/schema.ts` — 12 tables with Drizzle. Cloud Supabase proj
 See `.env.example`. Key vars:
 - `CALENDAR_MODE=mock|google` — which calendar implementation to use
 - `NEXT_PUBLIC_CALENDAR_MODE=mock|google` — client-side mirror (must match CALENDAR_MODE)
-- `AUTH_MODE=dev` — enables dev OTP (any code works)
+- `AUTH_MODE=dev` — enables dev OTP (any code works). Omit or set to anything else for real SMS via Supabase + Twilio
 - `DATABASE_URL` — Postgres connection (needed for seed, integration tests, and DB-backed negotiation)
 - `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` — Google OAuth2 credentials (required when CALENDAR_MODE=google)
 - `GOOGLE_REDIRECT_URI` — OAuth callback URL (default: `http://localhost:3002/api/auth/google/callback`)

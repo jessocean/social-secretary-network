@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { AUTH_CONFIG } from "@/lib/auth/config";
+import { createSupabaseServerClient } from "@/lib/auth/supabase-server";
 
 export async function POST(request: NextRequest) {
   try {
@@ -32,11 +33,22 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Production mode: would call Twilio here
-    return NextResponse.json(
-      { error: "SMS sending not configured. Set AUTH_MODE=dev for development." },
-      { status: 501 }
-    );
+    // Production mode: send OTP via Supabase Auth (uses Twilio under the hood)
+    const supabase = await createSupabaseServerClient();
+    const { error } = await supabase.auth.signInWithOtp({ phone: cleaned });
+
+    if (error) {
+      console.error("Supabase OTP send error:", error.message);
+      return NextResponse.json(
+        { error: "Failed to send verification code. Please try again." },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: "Verification code sent.",
+    });
   } catch {
     return NextResponse.json(
       { error: "Internal server error." },
