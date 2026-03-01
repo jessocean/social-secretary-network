@@ -81,27 +81,25 @@ export function CalendarReview({ data, onChange, onNext, onBack }: CalendarRevie
   const [expandedEventId, setExpandedEventId] = useState<string | null>(null);
   const [showSaveBanner, setShowSaveBanner] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [syncError, setSyncError] = useState(false);
 
   // Load events: fetch from Google Calendar sync API or use mock events
   useEffect(() => {
     if (CALENDAR_MODE === "google") {
       setLoading(true);
+      setSyncError(false);
       fetch("/api/calendar/sync", { method: "POST" })
         .then((r) => r.json())
         .then((result) => {
           if (result.success && result.events?.length > 0) {
             onChange({ events: convertSyncedEvents(result.events) });
-          } else {
-            // No events synced — use mock as placeholder
-            if (data.events.length === 0) {
-              onChange({ events: MOCK_EVENTS });
-            }
+          } else if (!result.success) {
+            setSyncError(true);
           }
         })
-        .catch(() => {
-          if (data.events.length === 0) {
-            onChange({ events: MOCK_EVENTS });
-          }
+        .catch((err) => {
+          console.error("Calendar sync failed:", err);
+          setSyncError(true);
         })
         .finally(() => setLoading(false));
     } else if (data.events.length === 0) {
@@ -214,6 +212,15 @@ export function CalendarReview({ data, onChange, onNext, onBack }: CalendarRevie
             <CardContent className="flex items-center justify-center gap-2 py-8">
               <Loader2 className="h-4 w-4 animate-spin text-gray-500" />
               <p className="text-sm text-muted-foreground">Loading your calendar...</p>
+            </CardContent>
+          </Card>
+        ) : syncError && data.events.length === 0 ? (
+          <Card className="border-dashed">
+            <CardContent className="py-8 text-center">
+              <p className="text-sm font-medium text-gray-900">Calendar not connected</p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Sign in with Google to sync your calendar, or add events manually below.
+              </p>
             </CardContent>
           </Card>
         ) : dayEvents.length === 0 ? (

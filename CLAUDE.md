@@ -42,10 +42,7 @@ All in `src/lib/agent/` — zero DB access, fully unit-testable:
 4. API route (`/api/agent/negotiate`) tries DB first, falls back to inline mock data
 
 ### Auth
-**Google OAuth sign-in** — single flow authenticates user AND grants calendar access. OAuth callback (`/api/auth/google/callback`) handles user find/create by email, calendar token storage, invite claiming, and session setup. Redirects to `/onboarding` (new user) or `/dashboard` (returning user).
-
-Dev mode (`AUTH_MODE=dev`): email-based login via `/api/auth/dev-login` (any email works, no Google needed).
-Production (no `AUTH_MODE`): "Sign in with Google" button → Google OAuth consent → callback. Requires `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI`.
+**Google OAuth sign-in** — single flow authenticates user AND grants calendar access. "Sign in with Google" button → OAuth consent → callback (`/api/auth/google/callback`) handles user find/create by email, calendar token storage, invite claiming, and session setup. Redirects to `/onboarding` (new user) or `/dashboard` (returning user). Requires `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI`.
 
 Session: `session_user_id` cookie (30 days, httpOnly). Users table keyed on `email` (not phone).
 
@@ -62,8 +59,8 @@ Schema at `src/lib/db/schema.ts` — 12 tables with Drizzle. Cloud Supabase proj
 1. User taps "Invite" on Friends page → `POST /api/invites` creates invite in DB with 7-day expiry
 2. Invite link shared → recipient sees `/invite/[code]` page with inviter's name
 3. Recipient chooses "Join" or "Just share calendar" → redirected to `/login?invite=CODE&type=TYPE`
-4. Login page passes invite params to Google OAuth (embedded in OAuth state) or dev-login API
-5. OAuth callback (or dev-login) claims the invite via `claimInvite()` (`src/lib/auth/invite-utils.ts`) — marks as used and auto-creates friendship in DB
+4. Login page passes invite params to Google OAuth (embedded in OAuth state)
+5. OAuth callback claims the invite via `claimInvite()` (`src/lib/auth/invite-utils.ts`) — marks as used and auto-creates friendship in DB
 6. New user lands in onboarding already connected as a friend of the inviter
 
 ## What's Done
@@ -105,8 +102,7 @@ Schema at `src/lib/db/schema.ts` — 12 tables with Drizzle. Cloud Supabase proj
 | `src/lib/calendar/mock.ts` | Mock calendar with 4 personas |
 | `src/lib/calendar/google.ts` | GoogleCalendarService — real Calendar API |
 | `src/lib/google/oauth.ts` | OAuth2 helpers (auth URL, token exchange, refresh, getUserInfo) |
-| `src/lib/auth/invite-utils.ts` | Shared claimInvite() for OAuth callback + dev-login |
-| `src/app/api/auth/dev-login/route.ts` | Dev mode email login (AUTH_MODE=dev only) |
+| `src/lib/auth/invite-utils.ts` | Shared claimInvite() for OAuth callback |
 | `src/hooks/useOnboarding.ts` | Onboarding wizard state management |
 | `src/hooks/useAddressSearch.ts` | Debounced Nominatim geocoding hook |
 | `src/components/ui/address-autocomplete.tsx` | Address autocomplete dropdown |
@@ -121,7 +117,6 @@ Schema at `src/lib/db/schema.ts` — 12 tables with Drizzle. Cloud Supabase proj
 See `.env.example`. Key vars:
 - `CALENDAR_MODE=mock|google` — which calendar implementation to use
 - `NEXT_PUBLIC_CALENDAR_MODE=mock|google` — client-side mirror (must match CALENDAR_MODE)
-- `AUTH_MODE=dev` — enables dev email login (any email works, no Google OAuth needed). Omit for production Google sign-in
 - `DATABASE_URL` — Postgres connection (needed for seed, integration tests, and DB-backed negotiation)
 - `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` — Google OAuth2 credentials (required for sign-in and calendar)
 - `GOOGLE_REDIRECT_URI` — OAuth callback URL (local: `http://localhost:3002/api/auth/google/callback`, prod: `https://social-secretary-network.vercel.app/api/auth/google/callback`)
@@ -198,14 +193,14 @@ See `.env.example`. Key vars:
 - Removed hardcoded `FRIEND_STATUS` map from proposals pending tab
 - Dashboard greeting reads user name from onboarding localStorage instead of hardcoded "Jessica"
 - Fixed remaining indigo/violet theme remnants: auth layout gradient → gray, app nav active state → gray-900, theme-color meta → `#111827`
-- Set `AUTH_MODE=dev` on Vercel (workaround for pending Twilio toll-free approval)
+- Removed `AUTH_MODE=dev` from Vercel (Google OAuth is now the only sign-in method)
 
 ### Round 6 (Google OAuth sign-in — replace phone/OTP)
 - Replaced phone/OTP auth with "Sign in with Google" — single flow for identity + calendar access
 - Schema: `users.phone` → `users.email`
 - OAuth helper: added `userinfo.profile` + `userinfo.email` scopes, `getUserInfo()` function, invite params in OAuth state
 - Rewrote OAuth callback: handles user find/create by email, calendar token upsert, invite claiming, session cookie, redirect to onboarding/dashboard
-- Rewrote login page: "Sign in with Google" button (prod) or email form (dev mode via `/api/auth/dev-login`)
+- Rewrote login page: "Sign in with Google" button (Google OAuth only)
 - Removed ConnectCalendar onboarding step (7 → 6 steps) — calendar already connected at sign-in
 - Extracted `claimInvite()` to shared module at `src/lib/auth/invite-utils.ts`
 - Updated all `phone` → `email` references: friends API, friends page, FriendCard, negotiate route, invites route
