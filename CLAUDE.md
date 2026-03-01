@@ -46,7 +46,21 @@ Dev mode (`AUTH_MODE=dev`): any 6-digit OTP code works. No Supabase needed.
 Production (no `AUTH_MODE` or any value other than `dev`): real SMS OTP via Supabase Auth + Twilio. Requires Twilio configured in Supabase Dashboard → Auth → Providers → Phone.
 
 ### Database
-Schema at `src/lib/db/schema.ts` — 12 tables with Drizzle. Cloud Supabase project (`social-secretary-app`, ref `tfwyrtkopvncsgxxnlpm`, region us-west-2). Schema pushed via `npm run db:push`, seeded via `npm run seed`. UI pages still use inline mock data.
+Schema at `src/lib/db/schema.ts` — 12 tables with Drizzle. Cloud Supabase project (`social-secretary-app`, ref `tfwyrtkopvncsgxxnlpm`, region us-west-2). Schema pushed via `npm run db:push`, seeded via `npm run seed`.
+
+### Auth Middleware
+`src/middleware.ts` — protects all app routes (`/dashboard`, `/proposals`, `/friends`, `/coordination`, `/onboarding`, `/settings`). Redirects to `/login` if no `session_user_id` cookie. Public routes (`/`, `/login`, `/verify`, `/invite/*`) are unprotected.
+
+### Friends System (DB-Backed)
+`/api/friends` — GET returns friendships from DB (joins with users table for display names), POST handles accept/decline/update/remove actions. Friends page fetches from API with loading state. No more mock data.
+
+### Invite Flow (End-to-End)
+1. User taps "Invite" on Friends page → `POST /api/invites` creates invite in DB with 7-day expiry
+2. Invite link shared → recipient sees `/invite/[code]` page with inviter's name
+3. Recipient chooses "Join" or "Just share calendar" → redirected to `/login?invite=CODE&type=TYPE`
+4. Login page stores invite params in sessionStorage, passes through to verify page
+5. `verify-otp` API claims the invite (marks as used) and auto-creates friendship in DB
+6. New user lands in onboarding already connected as a friend of the inviter
 
 ## What's Done
 - Full UI: landing, login, verify, onboarding (7 steps), dashboard, proposals, coordination, friends, settings, invite landing page
@@ -65,13 +79,18 @@ Schema at `src/lib/db/schema.ts` — 12 tables with Drizzle. Cloud Supabase proj
 - Settings page: calendar connection management (connect/disconnect/re-sync)
 - **Real phone OTP** via Supabase Auth + Twilio (send-otp and verify-otp routes wired up)
 - **Vercel deployment** — auto-deploys on push to main. URL: `social-secretary-network.vercel.app`
+- **Auth middleware** — protects app routes, redirects to login if no session
+- **DB-backed friends system** — friendships table, API routes for CRUD, no mock data
+- **End-to-end invite flow** — invite → signup → auto-friendship creation
+- **Invites stored in DB** — with expiry, usage tracking, inviter name lookup
+- **Removed all mock data from dashboard/proposals** — new users start with clean empty state
 
 ## What's NOT Done Yet
 - Playwright E2E tests
 - Weather API integration
 - Push notifications
-- Auth middleware (pages don't gate on login yet)
 - Native app conversion (Capacitor)
+- Twilio toll-free number approval (using `AUTH_MODE=dev` on Vercel as workaround — any 6-digit code works)
 
 ## Key Files
 | File | Purpose |
@@ -87,6 +106,9 @@ Schema at `src/lib/db/schema.ts` — 12 tables with Drizzle. Cloud Supabase proj
 | `src/hooks/useAddressSearch.ts` | Debounced Nominatim geocoding hook |
 | `src/components/ui/address-autocomplete.tsx` | Address autocomplete dropdown |
 | `src/app/api/geocode/search/route.ts` | Nominatim proxy with rate limiting |
+| `src/middleware.ts` | Auth middleware (protects app routes) |
+| `src/app/api/friends/route.ts` | DB-backed friends CRUD API |
+| `src/app/api/invites/route.ts` | DB-backed invite create/lookup API |
 | `scripts/seed-dev.ts` | Dev seed script (4 users) |
 | `docs/SPEC.md` | Full product spec |
 
@@ -158,6 +180,20 @@ See `.env.example`. Key vars:
 - Added Suspense boundary in onboarding page for `useSearchParams()` (Next.js 15 requirement)
 - 14 new unit tests: google-oauth (6), google-calendar (4), calendar-factory (4) — total now 45
 - Google Cloud project: `social-secretary-app`, OAuth client credentials in `.env.local`
+
+### Round 5 (launch prep — real user signup flow)
+- Added auth middleware at `src/middleware.ts` — all app routes now require `session_user_id` cookie, unauthenticated users redirected to `/login`
+- Rewrote `/api/friends` to use DB (`friendships` table) — GET joins with `users` for display names, POST handles accept/decline/update/remove
+- Rewrote `/api/invites` to use DB (`invites` table) — POST creates invite with 7-day expiry linked to session user, GET looks up by code with inviter name
+- Wired invite flow end-to-end: login page reads `?invite=&type=` params → stores in sessionStorage → verify page passes to `verify-otp` API → API claims invite + creates friendship
+- `verify-otp` now calls `claimInvite()` which marks invite as used and creates an `active` or `calendar_only` friendship between inviter and new user
+- Friends page now fetches from `/api/friends` with loading spinner — no more hardcoded mock friends
+- Removed `MOCK_PENDING` ("Dinner with Bob") from dashboard — pending proposals now read from localStorage
+- Removed `INITIAL_PROPOSALS` (Alice, Bob, Dave mock data) from proposals page — starts empty for new users
+- Removed hardcoded `FRIEND_STATUS` map from proposals pending tab
+- Dashboard greeting reads user name from onboarding localStorage instead of hardcoded "Jessica"
+- Fixed remaining indigo/violet theme remnants: auth layout gradient → gray, app nav active state → gray-900, theme-color meta → `#111827`
+- Set `AUTH_MODE=dev` on Vercel (workaround for pending Twilio toll-free approval)
 
 ## Conventions
 - Mobile-first, monochrome theme (gray-900 primary, no color accents)
