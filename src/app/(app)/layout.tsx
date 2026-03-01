@@ -43,14 +43,14 @@ export default function AppLayout({
                   className={cn(
                     "flex flex-col items-center gap-0.5 rounded-lg px-4 py-1.5 text-xs transition-colors",
                     isActive
-                      ? "text-indigo-600"
+                      ? "text-gray-900"
                       : "text-gray-500 hover:text-gray-900"
                   )}
                 >
                   <item.icon
                     className={cn(
                       "h-5 w-5",
-                      isActive && "text-indigo-600"
+                      isActive && "text-gray-900"
                     )}
                     strokeWidth={isActive ? 2.5 : 2}
                   />

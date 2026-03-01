@@ -1,19 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-
-// In-memory invite store for development
-const inviteStore = new Map<
-  string,
-  {
-    code: string;
-    createdBy: string;
-    createdByName: string;
-    type: "full" | "calendar_only";
-    usedBy: string | null;
-    usedAt: string | null;
-    expiresAt: string;
-    createdAt: string;
-  }
->();
+import { db } from "@/lib/db/client";
+import { invites, users } from "@/lib/db/schema";
+import { eq } from "drizzle-orm";
 
 function generateCode(): string {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789";
@@ -35,77 +23,97 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const invite = inviteStore.get(code);
+  try {
+    const [invite] = await db
+      .select()
+      .from(invites)
+      .where(eq(invites.code, code))
+      .limit(1);
 
-  if (!invite) {
-    // Return mock data for development if not found in store
-    // This allows the invite/[code] page to render without creating an invite first
-    return NextResponse.json({
-      invite: {
-        code,
-        createdBy: "mock-user-1",
-        createdByName: "Jessica",
-        type: "full",
-        usedBy: null,
-        usedAt: null,
-        expiresAt: new Date(
-          Date.now() + 7 * 24 * 60 * 60 * 1000
-        ).toISOString(),
-        createdAt: new Date().toISOString(),
-      },
-    });
-  }
+    if (!invite) {
+      return NextResponse.json(
+        { error: "Invite not found" },
+        { status: 404 }
+      );
+    }
 
-  // Check if expired
-  if (new Date(invite.expiresAt) < new Date()) {
+    // Get inviter's name
+    const [inviter] = await db
+      .select({ displayName: users.displayName, phone: users.phone })
+      .from(users)
+      .where(eq(users.id, invite.createdBy))
+      .limit(1);
+
+    const inviteData = {
+      code: invite.code,
+      createdBy: invite.createdBy,
+      createdByName: inviter?.displayName ?? inviter?.phone ?? "A friend",
+      type: invite.type,
+      usedBy: invite.usedBy,
+      usedAt: invite.usedAt?.toISOString() ?? null,
+      expiresAt: invite.expiresAt?.toISOString() ?? null,
+      createdAt: invite.createdAt.toISOString(),
+    };
+
+    // Check if expired
+    if (invite.expiresAt && new Date(invite.expiresAt) < new Date()) {
+      return NextResponse.json(
+        { error: "Invite has expired", invite: { ...inviteData, expired: true } },
+        { status: 410 }
+      );
+    }
+
+    // Check if already used
+    if (invite.usedBy) {
+      return NextResponse.json(
+        { error: "Invite has already been used", invite: { ...inviteData, used: true } },
+        { status: 410 }
+      );
+    }
+
+    return NextResponse.json({ invite: inviteData });
+  } catch (err) {
+    console.error("Error fetching invite:", err);
     return NextResponse.json(
-      { error: "Invite has expired", invite: { ...invite, expired: true } },
-      { status: 410 }
+      { error: "Failed to fetch invite" },
+      { status: 500 }
     );
   }
-
-  // Check if already used
-  if (invite.usedBy) {
-    return NextResponse.json(
-      {
-        error: "Invite has already been used",
-        invite: { ...invite, used: true },
-      },
-      { status: 410 }
-    );
-  }
-
-  return NextResponse.json({ invite });
 }
 
 export async function POST(request: NextRequest) {
-  const body = await request.json();
-  const { type } = body;
-
-  if (!type || !["full", "calendar_only"].includes(type)) {
-    return NextResponse.json(
-      { error: "type must be 'full' or 'calendar_only'" },
-      { status: 400 }
-    );
+  const userId = request.cookies.get("session_user_id")?.value;
+  if (!userId) {
+    return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
 
-  const code = generateCode();
-  const invite = {
-    code,
-    createdBy: "mock-user-1",
-    createdByName: "Jessica",
-    type: type as "full" | "calendar_only",
-    usedBy: null,
-    usedAt: null,
-    expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-    createdAt: new Date().toISOString(),
-  };
+  try {
+    const body = await request.json();
+    const type = body.type === "calendar_only" ? "calendar_only" : "full";
 
-  inviteStore.set(code, invite);
+    const code = generateCode();
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
 
-  return NextResponse.json({
-    code,
-    url: `/invite/${code}`,
-    invite,
-  });
+    const [invite] = await db
+      .insert(invites)
+      .values({
+        code,
+        createdBy: userId,
+        type,
+        expiresAt,
+      })
+      .returning();
+
+    return NextResponse.json({
+      code: invite.code,
+      url: `/invite/${invite.code}`,
+      invite,
+    });
+  } catch (err) {
+    console.error("Error creating invite:", err);
+    return NextResponse.json(
+      { error: "Failed to create invite" },
+      { status: 500 }
+    );
+  }
 }

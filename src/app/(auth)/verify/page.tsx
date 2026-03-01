@@ -32,10 +32,19 @@ export default function VerifyPage() {
       setError("");
       setIsLoading(true);
       try {
+        // Include invite context if present
+        const inviteCode = sessionStorage.getItem("auth_invite_code");
+        const inviteType = sessionStorage.getItem("auth_invite_type");
+
         const res = await fetch("/api/auth/verify-otp", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ phone, code: otpCode }),
+          body: JSON.stringify({
+            phone,
+            code: otpCode,
+            ...(inviteCode && { inviteCode }),
+            ...(inviteType && { inviteType }),
+          }),
         });
 
         const data = await res.json();
@@ -45,6 +54,10 @@ export default function VerifyPage() {
           inputRefs.current[0]?.focus();
           return;
         }
+
+        // Clean up invite context from sessionStorage
+        sessionStorage.removeItem("auth_invite_code");
+        sessionStorage.removeItem("auth_invite_type");
 
         // Redirect based on onboarding status
         if (data.user?.onboardingComplete) {

@@ -1,75 +1,79 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { FriendCard, type Friend } from "@/components/friends/FriendCard";
 import { InviteSheet } from "@/components/friends/InviteSheet";
-import { UserPlus, Search, Users } from "lucide-react";
+import { UserPlus, Search, Users, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-
-// Mock friends data (inline)
-const MOCK_FRIENDS: Friend[] = [
-  {
-    id: "f1",
-    displayName: "Alice Chen",
-    phone: "+1 555-0101",
-    status: "active",
-    priority: 8,
-    nickname: null,
-    lastHangout: "2026-02-20",
-  },
-  {
-    id: "f2",
-    displayName: "Bob Martinez",
-    phone: "+1 555-0102",
-    status: "active",
-    priority: 6,
-    nickname: "Bobby",
-    lastHangout: "2026-02-14",
-  },
-  {
-    id: "f3",
-    displayName: "Carol Johnson",
-    phone: "+1 555-0103",
-    status: "pending",
-    priority: 5,
-    nickname: null,
-    lastHangout: null,
-  },
-  {
-    id: "f4",
-    displayName: "Dave Kim",
-    phone: "+1 555-0104",
-    status: "calendar_only",
-    priority: 3,
-    nickname: null,
-    lastHangout: "2026-01-30",
-  },
-];
 
 type TabValue = "all" | "pending" | "calendar_only";
 
+interface ApiFriend {
+  id: string;
+  friendUserId: string;
+  displayName: string | null;
+  phone: string;
+  avatarUrl: string | null;
+  status: "active" | "pending" | "calendar_only" | "declined";
+  priority: number;
+  nickname: string | null;
+  lastHangout: string | null;
+  incoming: boolean;
+}
+
+function toFriend(af: ApiFriend): Friend {
+  return {
+    id: af.id,
+    displayName: af.displayName,
+    phone: af.phone,
+    status: af.status,
+    priority: af.priority,
+    nickname: af.nickname,
+    lastHangout: af.lastHangout,
+    avatarUrl: af.avatarUrl,
+  };
+}
+
 export default function FriendsPage() {
-  const [friends, setFriends] = useState<Friend[]>(MOCK_FRIENDS);
+  const [apiFriends, setApiFriends] = useState<ApiFriend[]>([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [activeTab, setActiveTab] = useState<TabValue>("all");
   const [inviteOpen, setInviteOpen] = useState(false);
+
+  const fetchFriends = useCallback(async () => {
+    try {
+      const res = await fetch("/api/friends");
+      if (!res.ok) throw new Error("Failed to fetch");
+      const data = await res.json();
+      setApiFriends(data.friends ?? []);
+    } catch {
+      // Silently fail — empty state will show
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchFriends();
+  }, [fetchFriends]);
+
+  const friends = apiFriends.map(toFriend);
 
   // Filter friends by search and tab
   const filteredFriends = useMemo(() => {
     let filtered = friends;
 
-    // Filter by tab
     if (activeTab === "pending") {
       filtered = filtered.filter((f) => f.status === "pending");
     } else if (activeTab === "calendar_only") {
       filtered = filtered.filter((f) => f.status === "calendar_only");
     }
 
-    // Filter by search
     if (search.trim()) {
       const query = search.toLowerCase();
       filtered = filtered.filter(
@@ -88,40 +92,76 @@ export default function FriendsPage() {
     (f) => f.status === "calendar_only"
   ).length;
 
-  const handleUpdatePriority = (friendId: string, priority: number) => {
-    setFriends((prev) =>
-      prev.map((f) => (f.id === friendId ? { ...f, priority } : f))
+  const apiAction = async (friendshipId: string, action: string, extra?: Record<string, unknown>) => {
+    try {
+      const res = await fetch("/api/friends", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action, friendshipId, ...extra }),
+      });
+      if (!res.ok) throw new Error("Failed");
+      return true;
+    } catch {
+      toast.error("Something went wrong. Please try again.");
+      return false;
+    }
+  };
+
+  const handleUpdatePriority = async (friendId: string, priority: number) => {
+    if (await apiAction(friendId, "update", { priority })) {
+      setApiFriends((prev) =>
+        prev.map((f) => (f.id === friendId ? { ...f, priority } : f))
+      );
+      toast.success("Priority updated");
+    }
+  };
+
+  const handleUpdateNickname = async (friendId: string, nickname: string) => {
+    if (await apiAction(friendId, "update", { nickname })) {
+      setApiFriends((prev) =>
+        prev.map((f) =>
+          f.id === friendId ? { ...f, nickname: nickname || null } : f
+        )
+      );
+      toast.success("Nickname updated");
+    }
+  };
+
+  const handleRemove = async (friendId: string) => {
+    const friend = apiFriends.find((f) => f.id === friendId);
+    if (await apiAction(friendId, "remove")) {
+      setApiFriends((prev) => prev.filter((f) => f.id !== friendId));
+      toast.success(`${friend?.displayName ?? "Friend"} removed`);
+    }
+  };
+
+  const handleAccept = async (friendId: string) => {
+    const friend = apiFriends.find((f) => f.id === friendId);
+    if (await apiAction(friendId, "accept")) {
+      setApiFriends((prev) =>
+        prev.map((f) =>
+          f.id === friendId ? { ...f, status: "active" as const } : f
+        )
+      );
+      toast.success(`${friend?.displayName ?? "Friend"} accepted!`);
+    }
+  };
+
+  const handleDecline = async (friendId: string) => {
+    if (await apiAction(friendId, "decline")) {
+      setApiFriends((prev) => prev.filter((f) => f.id !== friendId));
+      toast.success("Friend request declined");
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="mx-auto flex min-h-dvh max-w-lg flex-col items-center justify-center bg-gray-50">
+        <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
+        <p className="mt-2 text-sm text-muted-foreground">Loading friends...</p>
+      </div>
     );
-    toast.success("Priority updated");
-  };
-
-  const handleUpdateNickname = (friendId: string, nickname: string) => {
-    setFriends((prev) =>
-      prev.map((f) =>
-        f.id === friendId ? { ...f, nickname: nickname || null } : f
-      )
-    );
-    toast.success("Nickname updated");
-  };
-
-  const handleRemove = (friendId: string) => {
-    const friend = friends.find((f) => f.id === friendId);
-    setFriends((prev) => prev.filter((f) => f.id !== friendId));
-    toast.success(`${friend?.displayName ?? "Friend"} removed`);
-  };
-
-  const handleAccept = (friendId: string) => {
-    setFriends((prev) =>
-      prev.map((f) => (f.id === friendId ? { ...f, status: "active" as const } : f))
-    );
-    const friend = friends.find((f) => f.id === friendId);
-    toast.success(`${friend?.displayName ?? "Friend"} accepted!`);
-  };
-
-  const handleDecline = (friendId: string) => {
-    setFriends((prev) => prev.filter((f) => f.id !== friendId));
-    toast.success("Friend request declined");
-  };
+  }
 
   return (
     <div className="mx-auto flex min-h-dvh max-w-lg flex-col bg-gray-50">

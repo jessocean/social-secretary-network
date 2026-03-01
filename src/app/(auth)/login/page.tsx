@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -30,7 +30,18 @@ const COUNTRY_CODES = [
 ];
 
 export default function LoginPage() {
+  return (
+    <Suspense>
+      <LoginForm />
+    </Suspense>
+  );
+}
+
+function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const inviteCode = searchParams.get("invite");
+  const inviteType = searchParams.get("type");
   const [countryCode, setCountryCode] = useState("+1");
   const [phone, setPhone] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -61,8 +72,14 @@ export default function LoginPage() {
         return;
       }
 
-      // Store phone for the verify page
+      // Store phone and invite context for the verify page
       sessionStorage.setItem("auth_phone", fullPhone);
+      if (inviteCode) {
+        sessionStorage.setItem("auth_invite_code", inviteCode);
+      }
+      if (inviteType) {
+        sessionStorage.setItem("auth_invite_type", inviteType);
+      }
       router.push("/verify");
     } catch {
       setError("Something went wrong. Please try again.");
@@ -85,6 +102,12 @@ export default function LoginPage() {
           AI-powered social scheduling for busy parents
         </p>
       </div>
+
+      {inviteCode && (
+        <p className="text-sm text-center text-muted-foreground">
+          Sign in to accept your friend&apos;s invite
+        </p>
+      )}
 
       <Card className="w-full border-0 shadow-lg">
         <CardHeader className="pb-4 pt-6 text-center">
