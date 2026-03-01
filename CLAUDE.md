@@ -64,12 +64,12 @@ Schema at `src/lib/db/schema.ts` — 12 tables with Drizzle. Cloud Supabase proj
 - Dashboard → Proposals data flow via localStorage + negotiate API
 - Settings page: calendar connection management (connect/disconnect/re-sync)
 - **Real phone OTP** via Supabase Auth + Twilio (send-otp and verify-otp routes wired up)
+- **Vercel deployment** — auto-deploys on push to main. URL: `social-secretary-network.vercel.app`
 
 ## What's NOT Done Yet
 - Playwright E2E tests
 - Weather API integration
 - Push notifications
-- Vercel deployment
 - Auth middleware (pages don't gate on login yet)
 - Native app conversion (Capacitor)
 

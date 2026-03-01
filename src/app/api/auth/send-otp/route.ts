@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
     if (error) {
       console.error("Supabase OTP send error:", error.message);
       return NextResponse.json(
-        { error: "Failed to send verification code. Please try again." },
+        { error: "Failed to send verification code. Please try again.", detail: error.message },
         { status: 500 }
       );
     }
