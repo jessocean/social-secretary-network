@@ -9,7 +9,7 @@ const PROTECTED_PATHS = [
   "/settings",
 ];
 
-const PUBLIC_PATHS = ["/", "/login", "/verify", "/invite"];
+const PUBLIC_PATHS = ["/", "/login", "/invite"];
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;

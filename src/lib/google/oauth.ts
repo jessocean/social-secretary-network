@@ -2,6 +2,8 @@ import { google } from "googleapis";
 import crypto from "crypto";
 
 const SCOPES = [
+  "https://www.googleapis.com/auth/userinfo.profile",
+  "https://www.googleapis.com/auth/userinfo.email",
   "https://www.googleapis.com/auth/calendar.readonly",
   "https://www.googleapis.com/auth/calendar.events",
 ];
@@ -25,10 +27,20 @@ export function generateNonce(): string {
   return crypto.randomBytes(16).toString("hex");
 }
 
+interface AuthUrlOptions {
+  nonce: string;
+  inviteCode?: string;
+  inviteType?: string;
+}
+
 /** Build the Google OAuth consent URL */
-export function getAuthUrl(returnTo: string, nonce: string): string {
+export function getAuthUrl(options: AuthUrlOptions): string {
   const client = getOAuth2Client();
-  const state = JSON.stringify({ returnTo, nonce });
+  const state = JSON.stringify({
+    nonce: options.nonce,
+    ...(options.inviteCode && { inviteCode: options.inviteCode }),
+    ...(options.inviteType && { inviteType: options.inviteType }),
+  });
 
   return client.generateAuthUrl({
     access_type: "offline",
@@ -58,4 +70,30 @@ export function getCalendarClient(accessToken: string) {
   const client = getOAuth2Client();
   client.setCredentials({ access_token: accessToken });
   return google.calendar({ version: "v3", auth: client });
+}
+
+export interface GoogleUserInfo {
+  email: string;
+  name: string | null;
+  picture: string | null;
+  googleId: string;
+}
+
+/** Get user profile info from Google using an access token */
+export async function getUserInfo(accessToken: string): Promise<GoogleUserInfo> {
+  const client = getOAuth2Client();
+  client.setCredentials({ access_token: accessToken });
+  const oauth2 = google.oauth2({ version: "v2", auth: client });
+  const { data } = await oauth2.userinfo.get();
+
+  if (!data.email) {
+    throw new Error("No email returned from Google profile");
+  }
+
+  return {
+    email: data.email,
+    name: data.name ?? null,
+    picture: data.picture ?? null,
+    googleId: data.id ?? "",
+  };
 }

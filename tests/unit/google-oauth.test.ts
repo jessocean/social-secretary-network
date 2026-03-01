@@ -34,6 +34,18 @@ vi.mock("googleapis", () => {
         OAuth2: MockOAuth2,
       },
       calendar: vi.fn().mockReturnValue({ events: {} }),
+      oauth2: vi.fn().mockReturnValue({
+        userinfo: {
+          get: vi.fn().mockResolvedValue({
+            data: {
+              id: "google-123",
+              email: "test@example.com",
+              name: "Test User",
+              picture: "https://example.com/photo.jpg",
+            },
+          }),
+        },
+      }),
     },
   };
 });
@@ -43,7 +55,7 @@ process.env.GOOGLE_CLIENT_ID = "test-client-id";
 process.env.GOOGLE_CLIENT_SECRET = "test-client-secret";
 process.env.GOOGLE_REDIRECT_URI = "http://localhost:3002/api/auth/google/callback";
 
-import { generateNonce, getAuthUrl, exchangeCode, refreshAccessToken, getCalendarClient } from "@/lib/google/oauth";
+import { generateNonce, getAuthUrl, exchangeCode, refreshAccessToken, getCalendarClient, getUserInfo } from "@/lib/google/oauth";
 
 describe("Google OAuth helpers", () => {
   it("generateNonce returns a 32-char hex string", () => {
@@ -58,7 +70,16 @@ describe("Google OAuth helpers", () => {
   });
 
   it("getAuthUrl returns a Google OAuth URL", () => {
-    const url = getAuthUrl("/onboarding", "test-nonce");
+    const url = getAuthUrl({ nonce: "test-nonce" });
+    expect(url).toContain("https://accounts.google.com");
+  });
+
+  it("getAuthUrl includes invite params in state when provided", () => {
+    const url = getAuthUrl({
+      nonce: "test-nonce",
+      inviteCode: "ABC123",
+      inviteType: "full",
+    });
     expect(url).toContain("https://accounts.google.com");
   });
 
@@ -78,5 +99,13 @@ describe("Google OAuth helpers", () => {
     const client = getCalendarClient("mock-access-token");
     expect(client).toBeDefined();
     expect(client.events).toBeDefined();
+  });
+
+  it("getUserInfo returns user profile data", async () => {
+    const info = await getUserInfo("mock-access-token");
+    expect(info.email).toBe("test@example.com");
+    expect(info.name).toBe("Test User");
+    expect(info.picture).toBe("https://example.com/photo.jpg");
+    expect(info.googleId).toBe("google-123");
   });
 });

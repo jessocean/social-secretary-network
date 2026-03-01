@@ -70,7 +70,7 @@ export const engagementTypeEnum = pgEnum("engagement_type", [
 // Tables
 export const users = pgTable("users", {
   id: uuid("id").primaryKey().defaultRandom(),
-  phone: text("phone").unique().notNull(),
+  email: text("email").unique().notNull(),
   displayName: text("display_name"),
   avatarUrl: text("avatar_url"),
   onboardingComplete: boolean("onboarding_complete").default(false).notNull(),

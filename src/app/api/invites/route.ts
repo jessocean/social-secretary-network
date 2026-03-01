@@ -39,7 +39,7 @@ export async function GET(request: NextRequest) {
 
     // Get inviter's name
     const [inviter] = await db
-      .select({ displayName: users.displayName, phone: users.phone })
+      .select({ displayName: users.displayName, email: users.email })
       .from(users)
       .where(eq(users.id, invite.createdBy))
       .limit(1);
@@ -47,7 +47,7 @@ export async function GET(request: NextRequest) {
     const inviteData = {
       code: invite.code,
       createdBy: invite.createdBy,
-      createdByName: inviter?.displayName ?? inviter?.phone ?? "A friend",
+      createdByName: inviter?.displayName ?? inviter?.email ?? "A friend",
       type: invite.type,
       usedBy: invite.usedBy,
       usedAt: invite.usedAt?.toISOString() ?? null,

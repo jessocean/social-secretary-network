@@ -54,28 +54,28 @@ async function seed() {
   await db.insert(schema.users).values([
     {
       id: aliceId,
-      phone: "+15551001001",
+      email: "alice@example.com",
       displayName: "Alice",
       onboardingComplete: true,
       onboardingStep: 8,
     },
     {
       id: bobId,
-      phone: "+15551002002",
+      email: "bob@example.com",
       displayName: "Bob",
       onboardingComplete: true,
       onboardingStep: 8,
     },
     {
       id: carolId,
-      phone: "+15551003003",
+      email: "carol@example.com",
       displayName: "Carol",
       onboardingComplete: true,
       onboardingStep: 8,
     },
     {
       id: daveId,
-      phone: "+15551004004",
+      email: "dave@example.com",
       displayName: "Dave",
       onboardingComplete: false,
       onboardingStep: 0,

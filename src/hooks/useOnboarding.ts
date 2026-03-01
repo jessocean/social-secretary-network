@@ -3,7 +3,6 @@
 import { useState, useCallback, useMemo } from "react";
 
 export const ONBOARDING_STEPS = [
-  { id: "connect", label: "Connect" },
   { id: "calendar", label: "Calendar" },
   { id: "constraints", label: "Constraints" },
   { id: "preferences", label: "Preferences" },
@@ -44,7 +43,6 @@ export interface Location {
 }
 
 export interface OnboardingData {
-  connect: Record<string, unknown>;
   calendar: {
     events: CalendarEvent[];
   };
@@ -71,7 +69,6 @@ export interface OnboardingData {
 }
 
 const DEFAULT_DATA: OnboardingData = {
-  connect: {},
   calendar: {
     events: [],
   },

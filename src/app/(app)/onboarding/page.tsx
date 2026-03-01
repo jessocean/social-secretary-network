@@ -3,7 +3,6 @@
 import { Suspense } from "react";
 import { useRouter } from "next/navigation";
 import { useOnboarding, ONBOARDING_STEPS } from "@/hooks/useOnboarding";
-import { ConnectCalendar } from "@/components/onboarding/ConnectCalendar";
 import { CalendarReview } from "@/components/onboarding/CalendarReview";
 import { ConstraintsEditor } from "@/components/onboarding/ConstraintsEditor";
 import { PreferencesEditor } from "@/components/onboarding/PreferencesEditor";
@@ -24,13 +23,6 @@ export default function OnboardingPage() {
 
   const renderStep = () => {
     switch (onboarding.currentStepId) {
-      case "connect":
-        return (
-          <ConnectCalendar
-            onNext={onboarding.next}
-            onBack={onboarding.back}
-          />
-        );
       case "calendar":
         return (
           <CalendarReview

@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
           .select({
             id: users.id,
             displayName: users.displayName,
-            phone: users.phone,
+            email: users.email,
             avatarUrl: users.avatarUrl,
           })
           .from(users)
@@ -68,7 +68,7 @@ export async function GET(request: NextRequest) {
           id: row.friendshipId,
           friendUserId: otherUserId,
           displayName: otherUser?.displayName ?? null,
-          phone: otherUser?.phone ?? "",
+          email: otherUser?.email ?? "",
           avatarUrl: otherUser?.avatarUrl ?? null,
           status: displayStatus,
           priority: row.priority,

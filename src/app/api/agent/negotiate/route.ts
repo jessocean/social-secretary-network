@@ -261,7 +261,7 @@ export async function POST(request: NextRequest) {
       try {
         const dbUsers = await loadEligibleUsers();
         for (const u of dbUsers) {
-          nameMap.set(u.id, u.displayName ?? u.phone);
+          nameMap.set(u.id, u.displayName ?? u.email);
         }
       } catch {}
     }

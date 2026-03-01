@@ -20,7 +20,7 @@ import {
 export interface Friend {
   id: string;
   displayName: string | null;
-  phone: string;
+  email: string;
   status: "active" | "pending" | "calendar_only" | "declined";
   priority: number;
   nickname: string | null;
@@ -53,8 +53,8 @@ function getAvatarColor(name: string): string {
   return colors[Math.abs(hash) % colors.length];
 }
 
-function getInitials(name: string | null, phone: string): string {
-  if (!name) return phone.slice(-2);
+function getInitials(name: string | null, email: string): string {
+  if (!name) return email.slice(0, 2).toUpperCase();
   const parts = name.trim().split(/\s+/);
   if (parts.length >= 2) {
     return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
@@ -117,9 +117,9 @@ export function FriendCard({
   const [localNickname, setLocalNickname] = useState(friend.nickname ?? "");
   const [showRemoveConfirm, setShowRemoveConfirm] = useState(false);
 
-  const displayName = friend.displayName ?? friend.phone;
+  const displayName = friend.displayName ?? friend.email;
   const avatarColor = getAvatarColor(displayName);
-  const initials = getInitials(friend.displayName, friend.phone);
+  const initials = getInitials(friend.displayName, friend.email);
 
   const handleNicknameBlur = () => {
     if (localNickname !== (friend.nickname ?? "")) {
@@ -143,7 +143,7 @@ export function FriendCard({
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
             <span className="truncate text-sm font-semibold text-gray-900">
-              {friend.displayName ?? friend.phone}
+              {friend.displayName ?? friend.email}
             </span>
             {friend.nickname && (
               <span className="truncate text-xs text-muted-foreground">

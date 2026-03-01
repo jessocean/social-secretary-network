@@ -16,7 +16,7 @@ interface ApiFriend {
   id: string;
   friendUserId: string;
   displayName: string | null;
-  phone: string;
+  email: string;
   avatarUrl: string | null;
   status: "active" | "pending" | "calendar_only" | "declined";
   priority: number;
@@ -29,7 +29,7 @@ function toFriend(af: ApiFriend): Friend {
   return {
     id: af.id,
     displayName: af.displayName,
-    phone: af.phone,
+    email: af.email,
     status: af.status,
     priority: af.priority,
     nickname: af.nickname,
@@ -79,7 +79,7 @@ export default function FriendsPage() {
       filtered = filtered.filter(
         (f) =>
           f.displayName?.toLowerCase().includes(query) ||
-          f.phone.includes(query) ||
+          f.email.includes(query) ||
           f.nickname?.toLowerCase().includes(query)
       );
     }
