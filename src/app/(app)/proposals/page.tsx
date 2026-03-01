@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
-import { addDays, startOfWeek } from "date-fns";
+import { startOfWeek } from "date-fns";
 import { RefreshCw, CheckCheck, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -15,82 +15,18 @@ import {
 import { MessageComposer } from "@/components/proposals/MessageComposer";
 
 // ---------------------------------------------------------------------------
-// Mock data
-// ---------------------------------------------------------------------------
-
-const now = new Date();
-const weekStart = startOfWeek(now, { weekStartsOn: 1 });
-
-function makeTime(dayOffset: number, hour: number): string {
-  const d = addDays(weekStart, dayOffset);
-  d.setHours(hour, 0, 0, 0);
-  return d.toISOString();
-}
-
-// Friend statuses: Alice (active), Bob (active), Carol (pending), Dave (calendar_only)
-// Carol and Dave are non-app users who need messages
-const FRIEND_STATUS: Record<string, "app" | "non-app"> = {
-  "Alice Chen": "app",
-  "Bob Martinez": "app",
-  "Carol Johnson": "non-app",
-  "Dave Kim": "non-app",
-};
-
-const INITIAL_PROPOSALS: Proposal[] = [
-  {
-    id: "p1",
-    type: "coffee",
-    title: "Coffee with Alice",
-    description: "Catch up over lattes at Reveille.",
-    locationName: "Reveille Coffee Co",
-    startTime: makeTime(1, 10),
-    endTime: makeTime(1, 11),
-    status: "proposed",
-    participants: [
-      { name: "Alice Chen", response: "pending" },
-    ],
-  },
-  {
-    id: "p2",
-    type: "playground",
-    title: "Playground with Bob & kids",
-    description: "Let the kids play while you and Bob catch up.",
-    locationName: "Duboce Park",
-    startTime: makeTime(3, 15),
-    endTime: makeTime(3, 17),
-    status: "proposed",
-    participants: [
-      { name: "Bob Martinez", response: "pending" },
-    ],
-  },
-  {
-    id: "p4",
-    type: "playdate_home",
-    title: "Playdate at your place",
-    description: "Dave and his toddler come over for an indoor playdate.",
-    locationName: "Home (106 Corbett Ave)",
-    startTime: makeTime(5, 10),
-    endTime: makeTime(5, 12),
-    status: "proposed",
-    participants: [
-      { name: "Dave Kim", response: "pending" },
-    ],
-  },
-];
-
-// ---------------------------------------------------------------------------
-// Component
+// Storage
 // ---------------------------------------------------------------------------
 
 const STORAGE_KEY = "ssn-proposals";
 
 function loadProposals(): Proposal[] {
-  if (typeof window === "undefined") return INITIAL_PROPOSALS;
+  if (typeof window === "undefined") return [];
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) return JSON.parse(stored);
   } catch {}
-  return INITIAL_PROPOSALS;
+  return [];
 }
 
 export default function ProposalsPage() {
@@ -359,23 +295,8 @@ export default function ProposalsPage() {
                         Coordinate with participants:
                       </p>
                       {p.participants.map((participant) => {
-                        const isAppUser = FRIEND_STATUS[participant.name] === "app";
                         const key = `${p.id}:${participant.name}`;
                         const isSent = messageSent[key] ?? false;
-
-                        if (isAppUser) {
-                          return (
-                            <div
-                              key={participant.name}
-                              className="flex items-center gap-2 text-xs text-gray-500"
-                            >
-                              <span className="inline-block h-4 w-4 rounded-full border-2 border-gray-300 bg-gray-100" />
-                              <span>
-                                {participant.name.split(" ")[0]} will see this in their app
-                              </span>
-                            </div>
-                          );
-                        }
 
                         return (
                           <label

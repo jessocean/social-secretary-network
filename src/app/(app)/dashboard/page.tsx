@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { format, addDays, startOfWeek } from "date-fns";
 import {
@@ -12,6 +12,10 @@ import {
   Loader2,
   Coffee,
   UtensilsCrossed,
+  TreePine,
+  Home,
+  GraduationCap,
+  Footprints,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -20,25 +24,25 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 
 // ---------------------------------------------------------------------------
-// Mock data
+// Helpers
 // ---------------------------------------------------------------------------
-
-const now = new Date();
-const weekStart = startOfWeek(now, { weekStartsOn: 1 });
-
-const MOCK_PENDING = [
-  {
-    id: "4",
-    type: "dinner",
-    title: "Dinner with Bob",
-    status: "proposed" as const,
-  },
-];
 
 const TYPE_ICONS: Record<string, typeof Coffee> = {
   coffee: Coffee,
   dinner: UtensilsCrossed,
+  playground: TreePine,
+  playdate_home: Home,
+  park: TreePine,
+  class: GraduationCap,
+  walk: Footprints,
 };
+
+interface PendingProposal {
+  id: string;
+  type: string;
+  title: string;
+  status: string;
+}
 
 // ---------------------------------------------------------------------------
 // Component
@@ -46,14 +50,39 @@ const TYPE_ICONS: Record<string, typeof Coffee> = {
 
 export default function DashboardPage() {
   const [generating, setGenerating] = useState(false);
+  const [userName, setUserName] = useState<string | null>(null);
+  const [pendingProposals, setPendingProposals] = useState<PendingProposal[]>([]);
+
+  const now = new Date();
+  const weekStart = startOfWeek(now, { weekStartsOn: 1 });
+  const weekEndDate = addDays(weekStart, 6);
+  const weekRangeStr = `${format(weekStart, "MMM d")} - ${format(weekEndDate, "MMM d")}`;
+
+  // Load user name and pending proposals from localStorage
+  useEffect(() => {
+    try {
+      const onboarding = JSON.parse(localStorage.getItem("ssn-onboarding") || "{}");
+      if (onboarding.name) {
+        setUserName(onboarding.name);
+      }
+    } catch {}
+
+    try {
+      const stored = localStorage.getItem("ssn-proposals");
+      if (stored) {
+        const proposals = JSON.parse(stored);
+        const pending = proposals.filter(
+          (p: PendingProposal) => p.status === "proposed" || p.status === "draft"
+        );
+        setPendingProposals(pending);
+      }
+    } catch {}
+  }, []);
 
   const totalGoal = 5;
   const confirmedCount = 0;
-  const pendingCount = MOCK_PENDING.length;
+  const pendingCount = pendingProposals.length;
   const progress = Math.min((confirmedCount / totalGoal) * 100, 100);
-
-  const weekEndDate = addDays(weekStart, 6);
-  const weekRangeStr = `${format(weekStart, "MMM d")} - ${format(weekEndDate, "MMM d")}`;
 
   const handleGenerate = async () => {
     setGenerating(true);
@@ -107,6 +136,7 @@ export default function DashboardPage() {
           })
         );
         localStorage.setItem("ssn-proposals", JSON.stringify(proposals));
+        setPendingProposals(proposals);
       }
 
       toast.success(
@@ -123,7 +153,9 @@ export default function DashboardPage() {
     <div className="mx-auto max-w-lg px-4 pt-6 pb-4">
       {/* Header */}
       <div className="mb-6">
-        <p className="text-sm text-gray-500">Hello, Jessica</p>
+        <p className="text-sm text-gray-500">
+          {userName ? `Hello, ${userName}` : "Hello"}
+        </p>
         <div className="flex items-baseline justify-between">
           <h1 className="text-2xl font-bold text-gray-900">This Week</h1>
           <span className="text-sm text-gray-500">{weekRangeStr}</span>
@@ -200,12 +232,12 @@ export default function DashboardPage() {
       </div>
 
       {/* Pending proposals */}
-      {MOCK_PENDING.length > 0 && (
+      {pendingProposals.length > 0 && (
         <div className="mb-5">
           <h2 className="mb-3 text-sm font-semibold text-gray-900">
             Needs your review
           </h2>
-          {MOCK_PENDING.map((p) => {
+          {pendingProposals.slice(0, 3).map((p) => {
             const Icon = TYPE_ICONS[p.type] ?? Coffee;
 
             return (
